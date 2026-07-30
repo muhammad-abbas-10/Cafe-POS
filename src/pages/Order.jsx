@@ -1,0 +1,228 @@
+import React, { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { Search, Plus, Minus, Trash2, StickyNote, ArrowRight, Coffee, CupSoda, GlassWater, Utensils, Cookie, Cake, ShoppingBag } from "lucide-react";
+import { CATEGORIES, MENU_ITEMS, formatPrice } from "@/lib/cafeData";
+import { useCart } from "@/lib/CartContext";
+import ItemModifierSheet from "@/components/ItemModifierSheet";
+
+const CATEGORY_ICON = {
+  coffee: Coffee, juice: CupSoda, milk: Coffee, rice: Utensils, snack: Cookie, dessert: Cake,
+};
+const getItemIcon = (item) => {
+  if (item.name.toLowerCase().includes("cold")) return GlassWater;
+  return CATEGORY_ICON[item.category] || Coffee;
+};
+
+export default function Order() {
+  const navigate = useNavigate();
+  const { items, addItem, totals, orderType, setOrderType, table, setTable, removeLine, updateLine, setLineNote, billDiscount } = useCart();
+  const [activeCat, setActiveCat] = useState("coffee");
+  const [query, setQuery] = useState("");
+  const [modifierItem, setModifierItem] = useState(null);
+  const [noteFor, setNoteFor] = useState(null);
+
+  const filtered = useMemo(() => {
+    let list = MENU_ITEMS.filter((m) => m.available);
+    if (query.trim()) {
+      const q = query.toLowerCase();
+      list = list.filter((m) => m.name.toLowerCase().includes(q) || m.description.toLowerCase().includes(q));
+    } else {
+      list = list.filter((m) => m.category === activeCat);
+    }
+    return list;
+  }, [activeCat, query]);
+
+  return (
+    <div className="flex h-screen">
+      {/* Center column */}
+      <div className="flex-1 flex flex-col overflow-hidden px-8 py-7">
+        <div className="flex items-center justify-between gap-4 mb-5">
+          <h1 className="text-[28px] font-medium text-[hsl(var(--foreground))]">Choose category</h1>
+          <div className="relative w-72">
+            <Search size={18} strokeWidth={1.5} className="absolute left-3 top-1/2 -translate-y-1/2 text-[hsl(var(--muted-foreground))]" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search items…"
+              className="w-full h-11 pl-10 pr-4 rounded-[10px] bg-[hsl(var(--card))] border border-[hsl(var(--border))] text-sm placeholder:text-[hsl(var(--muted-foreground))] focus:outline-none focus:border-[#FF7A12]"
+            />
+          </div>
+        </div>
+
+        {/* Category chips */}
+        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-3 mb-4">
+          {CATEGORIES.map((c) => {
+            const active = !query && activeCat === c.id;
+            const Icon = CATEGORY_ICON[c.id] || Coffee;
+            return (
+              <button
+                key={c.id}
+                onClick={() => { setQuery(""); setActiveCat(c.id); }}
+                className={`shrink-0 h-14 px-4 rounded-[12px] flex items-center gap-2 border-2 transition-colors ${
+                  active
+                    ? "border-[#FF7A12] bg-[#FFF3EA] text-[#FF7A12]"
+                    : "border-[#E7DFD7] bg-[hsl(var(--card))] text-[#2F241F] hover:bg-[#FFF3EA]"
+                }`}
+              >
+                <Icon size={20} strokeWidth={1.5} className="text-[#2F241F]" />
+                <span className="text-sm font-medium">{c.name}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Item grid */}
+        <div className="flex-1 overflow-y-auto no-scrollbar">
+          <div className="grid grid-cols-2 xl:grid-cols-3 gap-4 pb-4">
+            {filtered.map((item) => {
+              const Icon = getItemIcon(item);
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setModifierItem(item)}
+                  className="text-left rounded-[12px] bg-[hsl(var(--card))] border border-[#E7DFD7] p-4 hover:border-[#2F241F] transition-colors min-h-[44px]"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-12 h-12 rounded-[10px] bg-[hsl(var(--muted))] flex items-center justify-center shrink-0">
+                      <Icon size={26} strokeWidth={1.5} className="text-[#2F241F]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[15px] font-medium text-[#2F241F] truncate">{item.name}</div>
+                      <div className="text-xs text-[hsl(var(--muted-foreground))] line-clamp-1 mt-0.5">{item.description}</div>
+                      <div className="text-[15px] font-medium text-[#FF7A12] mt-1.5">{formatPrice(item.price)}</div>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+            {filtered.length === 0 && (
+              <div className="col-span-full text-center text-sm text-[hsl(var(--muted-foreground))] py-12">No items match your search.</div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Right bill panel — single instance */}
+      <div className="w-[360px] shrink-0 border-l border-[#E7DFD7] bg-[hsl(var(--card))] flex flex-col">
+        <div className="p-5 pb-4 border-b border-[#E7DFD7]">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-[hsl(var(--muted))] flex items-center justify-center text-[#2F241F] font-medium">CM</div>
+            <div>
+              <div className="text-sm font-medium text-[hsl(var(--foreground))]">Counter 1</div>
+              <div className="text-xs text-[hsl(var(--muted-foreground))]">Cashier · Live session</div>
+            </div>
+          </div>
+          <div className="flex gap-2 mt-3">
+            <button
+              onClick={() => setOrderType("dine-in")}
+              className={`flex-1 h-9 rounded-[8px] text-xs font-medium border-2 transition-colors ${
+                orderType === "dine-in" ? "border-[#FF7A12] bg-[#FFF3EA] text-[#FF7A12]" : "border-[#E7DFD7] text-[hsl(var(--muted-foreground))]"
+              }`}
+            >Dine-in</button>
+            <button
+              onClick={() => setOrderType("takeaway")}
+              className={`flex-1 h-9 rounded-[8px] text-xs font-medium border-2 transition-colors ${
+                orderType === "takeaway" ? "border-[#FF7A12] bg-[#FFF3EA] text-[#FF7A12]" : "border-[#E7DFD7] text-[hsl(var(--muted-foreground))]"
+              }`}
+            >Takeaway</button>
+          </div>
+          {orderType === "dine-in" && (
+            <input
+              value={table}
+              onChange={(e) => setTable(e.target.value)}
+              placeholder="Table number"
+              className="w-full h-9 mt-2 px-3 rounded-[8px] border border-[hsl(var(--border))] text-sm focus:outline-none focus:border-[#FF7A12]"
+            />
+          )}
+        </div>
+
+        <div className="flex-1 overflow-y-auto no-scrollbar p-5 space-y-3">
+          {items.length === 0 && (
+            <div className="min-h-full flex flex-col items-center justify-center text-center gap-3">
+              <ShoppingBag size={28} strokeWidth={1.5} className="text-[#8A8178]" />
+              <span className="text-sm text-[hsl(var(--muted-foreground))]">Tap an item to start building the bill.</span>
+            </div>
+          )}
+          {items.map((line) => (
+            <div key={line.lineId} className="rounded-[12px] border border-[hsl(var(--border))] p-3">
+              <div className="flex items-start gap-2">
+                <span className="text-lg">{line.icon}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-[hsl(var(--foreground))]">{line.name}</div>
+                  <div className="text-[11px] text-[hsl(var(--muted-foreground))] mt-0.5">
+                    {[line.size && line.size.name, line.temperature, line.sugar, line.ice].filter(Boolean).join(" · ")}
+                  </div>
+                  {line.addons.length > 0 && (
+                    <div className="text-[11px] text-[hsl(var(--muted-foreground))]">+ {line.addons.map((a) => a.name).join(", ")}</div>
+                  )}
+                  {line.note && <div className="text-[11px] text-[#FF7A12] mt-1 italic">“{line.note}”</div>}
+                </div>
+                <div className="text-sm font-medium text-[hsl(var(--foreground))]">{formatPrice(line.lineTotal)}</div>
+              </div>
+              <div className="flex items-center justify-between mt-2">
+                <div className="flex items-center gap-1">
+                  <button onClick={() => updateLine(line.lineId, { qty: Math.max(1, line.qty - 1) })} className="w-7 h-7 rounded-md border border-[hsl(var(--border))] flex items-center justify-center"><Minus size={14} strokeWidth={1.5} /></button>
+                  <span className="text-sm w-6 text-center">{line.qty}</span>
+                  <button onClick={() => updateLine(line.lineId, { qty: line.qty + 1 })} className="w-7 h-7 rounded-md border border-[hsl(var(--border))] flex items-center justify-center"><Plus size={14} strokeWidth={1.5} /></button>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => setNoteFor(line)} className="w-7 h-7 rounded-md border border-[hsl(var(--border))] flex items-center justify-center text-[hsl(var(--muted-foreground))]" title="Add note"><StickyNote size={14} strokeWidth={1.5} /></button>
+                  <button onClick={() => removeLine(line.lineId)} className="w-7 h-7 rounded-md border border-[hsl(var(--border))] flex items-center justify-center text-[hsl(var(--muted-foreground))]" title="Remove"><Trash2 size={14} strokeWidth={1.5} /></button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="p-5 border-t border-[#E7DFD7] space-y-2">
+          <Row label="Subtotal" value={formatPrice(totals.subtotal)} />
+          {billDiscount && <Row label={`Discount (${billDiscount.code})`} value={`−${formatPrice(totals.discountAmount)}`} accent />}
+          <Row label="Tax (8%)" value={formatPrice(totals.tax)} muted />
+          <div className="flex items-center justify-between pt-2 border-t border-[#E7DFD7]">
+            <span className="text-sm font-medium text-[#2F241F]">Total</span>
+            <span className="text-[22px] font-medium text-[#2F241F]">{formatPrice(totals.total)}</span>
+          </div>
+          <button
+            onClick={() => navigate("/payment")}
+            disabled={items.length === 0}
+            className="w-full h-12 rounded-[10px] bg-[#FF7A12] text-white text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-40 mt-2 hover:opacity-90 transition-opacity"
+          >
+            Send to payment <ArrowRight size={16} strokeWidth={1.5} />
+          </button>
+        </div>
+      </div>
+
+      {modifierItem && (
+        <ItemModifierSheet item={modifierItem} onClose={() => setModifierItem(null)} onAdd={(entry) => { addItem(entry); setModifierItem(null); }} />
+      )}
+      {noteFor && (
+        <NoteModal line={noteFor} onClose={() => setNoteFor(null)} onSave={(t) => { setLineNote(noteFor.lineId, t); setNoteFor(null); }} />
+      )}
+    </div>
+  );
+}
+
+function Row({ label, value, muted, accent }) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-[13px] text-[hsl(var(--muted-foreground))]">{label}</span>
+      <span className={`text-sm ${accent ? "text-[#FF7A12]" : muted ? "text-[hsl(var(--muted-foreground))]" : "text-[#2F241F]"}`}>{value}</span>
+    </div>
+  );
+}
+
+function NoteModal({ line, onClose, onSave }) {
+  const [text, setText] = useState(line.note || "");
+  return (
+    <div className="fixed inset-0 bg-black/30 z-50 flex items-end sm:items-center justify-center" onClick={onClose}>
+      <div className="bg-[hsl(var(--card))] w-full sm:max-w-md rounded-t-[16px] sm:rounded-[12px] border border-[hsl(var(--border))] p-5" onClick={(e) => e.stopPropagation()}>
+        <div className="text-sm font-medium mb-3">Note for {line.name}</div>
+        <textarea value={text} onChange={(e) => setText(e.target.value)} rows={3} placeholder="e.g. no whipped cream" className="w-full rounded-[8px] border border-[hsl(var(--border))] p-3 text-sm focus:outline-none focus:border-[#FF7A12]" />
+        <div className="flex gap-2 mt-3">
+          <button onClick={onClose} className="flex-1 h-10 rounded-[8px] border border-[hsl(var(--border))] text-sm">Cancel</button>
+          <button onClick={() => onSave(text)} className="flex-1 h-10 rounded-[8px] bg-[#FF7A12] text-white text-sm">Save note</button>
+        </div>
+      </div>
+    </div>
+  );
+}

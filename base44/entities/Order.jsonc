@@ -1,0 +1,111 @@
+{
+  "name": "Order",
+  "type": "object",
+  "properties": {
+    "order_number": {
+      "type": "string"
+    },
+    "order_type": {
+      "type": "string",
+      "enum": [
+        "dine-in",
+        "takeaway"
+      ],
+      "default": "dine-in"
+    },
+    "table_number": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "new",
+        "preparing",
+        "ready",
+        "completed",
+        "cancelled"
+      ],
+      "default": "new"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "qty": {
+            "type": "number"
+          },
+          "unitPrice": {
+            "type": "number"
+          },
+          "lineTotal": {
+            "type": "number"
+          },
+          "size": {
+            "type": "string"
+          },
+          "temperature": {
+            "type": "string"
+          },
+          "sugar": {
+            "type": "string"
+          },
+          "ice": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "subtotal": {
+      "type": "number"
+    },
+    "discount_amount": {
+      "type": "number"
+    },
+    "discount_code": {
+      "type": "string"
+    },
+    "tax": {
+      "type": "number"
+    },
+    "total": {
+      "type": "number"
+    },
+    "payment_method": {
+      "type": "string",
+      "enum": [
+        "cash",
+        "card",
+        "e-wallet",
+        "split"
+      ],
+      "default": "cash"
+    },
+    "payment_split": {
+      "type": "string"
+    },
+    "served_by": {
+      "type": "string"
+    },
+    "elapsed_seconds": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "order_number",
+    "order_type",
+    "status",
+    "items",
+    "total"
+  ]
+}
