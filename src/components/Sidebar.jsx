@@ -38,10 +38,10 @@ export default function Sidebar({ role, onRoleChange }) {
             key={to}
             to={to}
             className={({ isActive }) =>
-              `group relative w-12 h-12 rounded-xl flex flex-col items-center justify-center border-2 transition-colors ${
+              `group relative w-14 h-14 rounded-2xl flex flex-col items-center justify-center transition-colors ${
                 isActive
-                  ? "border-[#FF7A12] bg-[#FFF3EA] text-[#FF7A12]"
-                  : "border-transparent text-[#8A8178] hover:bg-[hsl(var(--muted))]"
+                  ? "bg-[hsl(var(--primary))] text-white shadow-sm"
+                  : "text-[#8A8178] hover:bg-[hsl(var(--muted))]"
               }`
             }
           >
@@ -81,7 +81,7 @@ function RoleSwitcher({ role, onRoleChange }) {
               key={r}
               onClick={() => { onRoleChange(r); setOpen(false); }}
               className={`block w-full text-left px-3 py-1.5 text-xs hover:bg-[hsl(var(--muted))] ${
-                role === r ? "text-[#FF7A12] font-medium" : "text-[#2F241F]"
+                role === r ? "text-[hsl(var(--primary))] font-medium" : "text-[#2F241F]"
               }`}
             >
               {ROLE_LABEL[r]}

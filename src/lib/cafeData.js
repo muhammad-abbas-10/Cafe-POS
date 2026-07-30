@@ -28,26 +28,26 @@ export const ADDONS = [
 ];
 
 export const MENU_ITEMS = [
-  { id: "mi-1", name: "Espresso", description: "Rich single-origin double shot", price: 3.0, category: "coffee", icon: "☕", available: true, drink: true },
-  { id: "mi-2", name: "Cappuccino", description: "Espresso, steamed milk, foam", price: 4.5, category: "coffee", icon: "☕", available: true, drink: true },
-  { id: "mi-3", name: "Café latte", description: "Smooth espresso with silky milk", price: 4.75, category: "coffee", icon: "☕", available: true, drink: true },
-  { id: "mi-4", name: "Americano", description: "Espresso lengthened with hot water", price: 3.5, category: "coffee", icon: "☕", available: true, drink: true },
-  { id: "mi-5", name: "Mocha", description: "Espresso, chocolate, steamed milk", price: 5.0, category: "coffee", icon: "☕", available: true, drink: true },
-  { id: "mi-6", name: "Cold brew", description: "18-hour steeped, smooth and bold", price: 4.5, category: "coffee", icon: "🧊", available: true, drink: true },
-  { id: "mi-7", name: "Orange juice", description: "Freshly squeezed, no added sugar", price: 4.0, category: "juice", icon: "🍊", available: true, drink: true },
-  { id: "mi-8", name: "Green juice", description: "Kale, apple, cucumber, ginger", price: 5.0, category: "juice", icon: "🥬", available: true, drink: true },
-  { id: "mi-9", name: "Berry smoothie", description: "Mixed berries, banana, yogurt", price: 5.5, category: "juice", icon: "🫐", available: true, drink: true },
-  { id: "mi-10", name: "Matcha latte", description: "Ceremonial matcha, steamed milk", price: 5.25, category: "milk", icon: "🍵", available: true, drink: true },
-  { id: "mi-11", name: "Hot chocolate", description: "Dark chocolate, steamed milk", price: 4.5, category: "milk", icon: "🍫", available: true, drink: true },
-  { id: "mi-12", name: "Chai latte", description: "Spiced chai, steamed milk", price: 4.75, category: "milk", icon: "🫖", available: true, drink: true },
-  { id: "mi-13", name: "Rice bowl", description: "Rice, teriyaki chicken, greens", price: 7.5, category: "rice", icon: "🍚", available: true, drink: false },
-  { id: "mi-14", name: "Egg fried rice", description: "Wok-tossed with scallion", price: 6.5, category: "rice", icon: "🍳", available: true, drink: false },
-  { id: "mi-15", name: "Butter croissant", description: "Flaky, all-butter, baked daily", price: 3.5, category: "snack", icon: "🥐", available: true, drink: false },
-  { id: "mi-16", name: "Blueberry muffin", description: "Soft crumb, fresh blueberries", price: 3.0, category: "snack", icon: "🧁", available: true, drink: false },
-  { id: "mi-17", name: "Choc chip cookies", price: 2.5, description: "Two soft-baked cookies", category: "snack", icon: "🍪", available: true, drink: false },
-  { id: "mi-18", name: "Cheesecake", description: "New York baked, berry coulis", price: 5.5, category: "dessert", icon: "🍰", available: true, drink: false },
-  { id: "mi-19", name: "Fudge brownie", description: "Dense, gooey, walnut", price: 4.0, category: "dessert", icon: "🍫", available: true, drink: false },
-  { id: "mi-20", name: "Tiramisu", description: "Coffee-soaked, mascarpone", price: 5.75, category: "dessert", icon: "🍰", available: true, drink: false },
+  { id: "mi-1", name: "Espresso", description: "Rich single-origin double shot", price: 3.0, category: "coffee", image: imgEspresso, available: true, drink: true },
+  { id: "mi-2", name: "Cappuccino", description: "Espresso, steamed milk, foam", price: 4.5, category: "coffee", image: imgCappuccino, available: true, drink: true },
+  { id: "mi-3", name: "Café latte", description: "Smooth espresso with silky milk", price: 4.75, category: "coffee", image: imgCafeLatte, available: true, drink: true },
+  { id: "mi-4", name: "Americano", description: "Espresso lengthened with hot water", price: 3.5, category: "coffee", image: imgAmericano, available: true, drink: true },
+  { id: "mi-5", name: "Mocha", description: "Espresso, chocolate, steamed milk", price: 5.0, category: "coffee", image: imgMocha, available: true, drink: true },
+  { id: "mi-6", name: "Cold brew", description: "18-hour steeped, smooth and bold", price: 4.5, category: "coffee", image: imgColdBrew, available: true, drink: true },
+  { id: "mi-7", name: "Orange juice", description: "Freshly squeezed, no added sugar", price: 4.0, category: "juice", image: imgOrangeJuice, available: true, drink: true },
+  { id: "mi-8", name: "Green juice", description: "Kale, apple, cucumber, ginger", price: 5.0, category: "juice", image: imgGreenJuice, available: true, drink: true },
+  { id: "mi-9", name: "Berry smoothie", description: "Mixed berries, banana, yogurt", price: 5.5, category: "juice", image: imgBerrySmoothie, available: true, drink: true },
+  { id: "mi-10", name: "Matcha latte", description: "Ceremonial matcha, steamed milk", price: 5.25, category: "milk", image: imgMatchaLatte, available: true, drink: true },
+  { id: "mi-11", name: "Hot chocolate", description: "Dark chocolate, steamed milk", price: 4.5, category: "milk", image: imgHotChocolate, available: true, drink: true },
+  { id: "mi-12", name: "Chai latte", description: "Spiced chai, steamed milk", price: 4.75, category: "milk", image: imgChaiLatte, available: true, drink: true },
+  { id: "mi-13", name: "Rice bowl", description: "Rice, teriyaki chicken, greens", price: 7.5, category: "rice", image: imgRiceBowl, available: true, drink: false },
+  { id: "mi-14", name: "Egg fried rice", description: "Wok-tossed with scallion", price: 6.5, category: "rice", image: imgEggFriedRice, available: true, drink: false },
+  { id: "mi-15", name: "Butter croissant", description: "Flaky, all-butter, baked daily", price: 3.5, category: "snack", image: imgCroissant, available: true, drink: false },
+  { id: "mi-16", name: "Blueberry muffin", description: "Soft crumb, fresh blueberries", price: 3.0, category: "snack", image: imgBlueberryMuffin, available: true, drink: false },
+  { id: "mi-17", name: "Choc chip cookies", price: 2.5, description: "Two soft-baked cookies", category: "snack", image: imgCookies, available: true, drink: false },
+  { id: "mi-18", name: "Cheesecake", description: "New York baked, berry coulis", price: 5.5, category: "dessert", image: imgCheesecake, available: true, drink: false },
+  { id: "mi-19", name: "Fudge brownie", description: "Dense, gooey, walnut", price: 4.0, category: "dessert", image: imgBrownie, available: true, drink: false },
+  { id: "mi-20", name: "Tiramisu", description: "Coffee-soaked, mascarpone", price: 5.75, category: "dessert", image: imgTiramisu, available: true, drink: false },
 ];
 
 export const sizesFor = (item) => (item.drink ? SIZES_DRINK : SIZES_NONE);
@@ -102,3 +102,23 @@ export const SLOW_ITEMS = [
   { name: "Green juice", qty: 6, revenue: 30.0 },
   { name: "Chai latte", qty: 9, revenue: 42.75 },
 ];
+import imgEspresso from "@/assets/espreso.jpg";
+import imgCappuccino from "@/assets/cappuccino.jpg";
+import imgCafeLatte from "@/assets/Café latte.jpg";
+import imgAmericano from "@/assets/Americano.jpg";
+import imgMocha from "@/assets/Mocha.jpg";
+import imgColdBrew from "@/assets/Cold brew.jpg";
+import imgOrangeJuice from "@/assets/Orange juice.jpg";
+import imgGreenJuice from "@/assets/Green juice.jpg";
+import imgBerrySmoothie from "@/assets/Berry smoothie.jpg";
+import imgMatchaLatte from "@/assets/Matcha latte.jpg";
+import imgHotChocolate from "@/assets/Hot chocolate.jpg";
+import imgChaiLatte from "@/assets/Chai latte.jpg";
+import imgRiceBowl from "@/assets/Rice bowl.jpg";
+import imgEggFriedRice from "@/assets/Egg fried rice.jpg";
+import imgCroissant from "@/assets/Butter croissant.jpg";
+import imgBlueberryMuffin from "@/assets/Blueberry muffin.jpg";
+import imgCookies from "@/assets/Choc chip cookies.jpg";
+import imgCheesecake from "@/assets/Cheesecake.jpg";
+import imgBrownie from "@/assets/Fudge brownie.jpg";
+import imgTiramisu from "@/assets/Tiramisu.jpg";

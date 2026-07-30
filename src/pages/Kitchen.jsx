@@ -63,7 +63,7 @@ export default function Kitchen() {
     <div className="px-8 py-7">
       <div className="flex items-center justify-between mb-5">
         <h1 className="text-[28px] font-medium">Kitchen queue</h1>
-        <span className="text-xs text-[hsl(var(--muted-foreground))]">Live · {tick >= 0 ? "" : ""}{orders.filter((o) => o.status !== "completed").length} active</span>
+        <span className="text-xs text-[hsl(var(--muted-foreground))]">Live · {orders.filter((o) => o.status !== "completed").length} active</span>
       </div>
 
       <div className="flex gap-2 mb-5">
@@ -89,8 +89,9 @@ export default function Kitchen() {
               </div>
               <div className="space-y-1.5 mb-3">
                 {o.items?.map((it, i) => (
-                  <div key={i} className="flex items-center justify-between text-sm">
-                    <span className="flex items-center gap-1.5"><span>{it.icon}</span>{it.qty}× {it.name}</span>
+                  <div key={i} className="flex items-center gap-2 text-sm">
+                    <img src={it.image} alt={it.name} className="w-6 h-6 rounded-[6px] object-cover bg-[hsl(var(--muted))]" />
+                    <span className="flex-1">{it.qty}× {it.name}</span>
                   </div>
                 ))}
                 {(o.items || []).filter((it) => it.note).length > 0 && (

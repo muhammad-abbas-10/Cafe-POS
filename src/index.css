@@ -10,13 +10,13 @@
     --card-foreground: 20 21% 15%;
     --popover: 40 60% 99%;
     --popover-foreground: 20 21% 15%;
-    --primary: 25 100% 54%;
+    --primary: 14 45% 24%;
     --primary-foreground: 40 60% 99%;
     --secondary: 353 33% 93%;
     --secondary-foreground: 20 21% 15%;
     --muted: 40 14% 92%;
     --muted-foreground: 30 7% 51%;
-    --accent: 25 77% 44%;
+    --accent: 14 45% 24%;
     --accent-foreground: 40 60% 99%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 40 60% 99%;
@@ -35,7 +35,7 @@
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     --sidebar-background: 40 33% 95%;
     --sidebar-foreground: 30 7% 51%;
-    --sidebar-primary: 25 100% 54%;
+    --sidebar-primary: 14 45% 24%;
     --sidebar-primary-foreground: 40 60% 99%;
     --sidebar-accent: 353 33% 93%;
     --sidebar-accent-foreground: 20 21% 15%;

@@ -22,7 +22,7 @@ export default function ItemModifierSheet({ item, onClose, onAdd }) {
     onAdd({
       itemId: item.id,
       name: item.name,
-      icon: item.icon,
+      image: item.image,
       basePrice: item.price,
       size,
       sizeDelta: size.delta || 0,
@@ -44,7 +44,7 @@ export default function ItemModifierSheet({ item, onClose, onAdd }) {
       >
         <div className="flex items-center justify-between p-5 border-b border-[hsl(var(--border))]">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-[10px] bg-[hsl(var(--muted))] flex items-center justify-center text-2xl">{item.icon}</div>
+            <img src={item.image} alt={item.name} className="w-14 h-14 rounded-[10px] object-cover" />
             <div>
               <div className="text-[15px] font-medium">{item.name}</div>
               <div className="text-xs text-[hsl(var(--muted-foreground))]">{item.description}</div>

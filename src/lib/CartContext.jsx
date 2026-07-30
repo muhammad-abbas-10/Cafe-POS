@@ -16,7 +16,7 @@ export function CartProvider({ children }) {
       lineId: uid(),
       itemId: entry.itemId,
       name: entry.name,
-      icon: entry.icon,
+      image: entry.image,
       basePrice: entry.basePrice,
       size: entry.size,
       sizeDelta: entry.sizeDelta,

@@ -8,10 +8,6 @@ import ItemModifierSheet from "@/components/ItemModifierSheet";
 const CATEGORY_ICON = {
   coffee: Coffee, juice: CupSoda, milk: Coffee, rice: Utensils, snack: Cookie, dessert: Cake,
 };
-const getItemIcon = (item) => {
-  if (item.name.toLowerCase().includes("cold")) return GlassWater;
-  return CATEGORY_ICON[item.category] || Coffee;
-};
 
 export default function Order() {
   const navigate = useNavigate();
@@ -44,7 +40,7 @@ export default function Order() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search items…"
-              className="w-full h-11 pl-10 pr-4 rounded-[10px] bg-[hsl(var(--card))] border border-[hsl(var(--border))] text-sm placeholder:text-[hsl(var(--muted-foreground))] focus:outline-none focus:border-[#FF7A12]"
+              className="w-full h-11 pl-10 pr-4 rounded-[10px] bg-[hsl(var(--card))] border border-[hsl(var(--border))] text-sm placeholder:text-[hsl(var(--muted-foreground))] focus:outline-none focus:border-[hsl(var(--primary))]"
             />
           </div>
         </div>
@@ -60,8 +56,8 @@ export default function Order() {
                 onClick={() => { setQuery(""); setActiveCat(c.id); }}
                 className={`shrink-0 h-14 px-4 rounded-[12px] flex items-center gap-2 border-2 transition-colors ${
                   active
-                    ? "border-[#FF7A12] bg-[#FFF3EA] text-[#FF7A12]"
-                    : "border-[#E7DFD7] bg-[hsl(var(--card))] text-[#2F241F] hover:bg-[#FFF3EA]"
+                    ? "border-[hsl(var(--accent))] bg-[hsl(var(--secondary))] text-[hsl(var(--accent))]"
+                    : "border-[#E7DFD7] bg-[hsl(var(--card))] text-[#2F241F] hover:bg-[hsl(var(--secondary))]"
                 }`}
               >
                 <Icon size={20} strokeWidth={1.5} className="text-[#2F241F]" />
@@ -74,27 +70,26 @@ export default function Order() {
         {/* Item grid */}
         <div className="flex-1 overflow-y-auto no-scrollbar">
           <div className="grid grid-cols-2 xl:grid-cols-3 gap-4 pb-4">
-            {filtered.map((item) => {
-              const Icon = getItemIcon(item);
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setModifierItem(item)}
-                  className="text-left rounded-[12px] bg-[hsl(var(--card))] border border-[#E7DFD7] p-4 hover:border-[#2F241F] transition-colors min-h-[44px]"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="w-12 h-12 rounded-[10px] bg-[hsl(var(--muted))] flex items-center justify-center shrink-0">
-                      <Icon size={26} strokeWidth={1.5} className="text-[#2F241F]" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[15px] font-medium text-[#2F241F] truncate">{item.name}</div>
-                      <div className="text-xs text-[hsl(var(--muted-foreground))] line-clamp-1 mt-0.5">{item.description}</div>
-                      <div className="text-[15px] font-medium text-[#FF7A12] mt-1.5">{formatPrice(item.price)}</div>
-                    </div>
+            {filtered.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setModifierItem(item)}
+                className="text-left rounded-[16px] bg-[hsl(var(--card))] border border-[#E7DFD7] p-4 hover:border-[hsl(var(--primary))] transition-colors"
+              >
+                <div className="flex items-start gap-3">
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="w-16 h-16 rounded-[12px] object-cover shrink-0 bg-[hsl(var(--muted))]"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[15px] font-medium text-[#2F241F] truncate">{item.name}</div>
+                    <div className="text-xs text-[hsl(var(--muted-foreground))] line-clamp-1 mt-0.5">{item.description}</div>
+                    <div className="text-[15px] font-medium text-[hsl(var(--primary))] mt-1.5">{formatPrice(item.price)}</div>
                   </div>
-                </button>
-              );
-            })}
+                </div>
+              </button>
+            ))}
             {filtered.length === 0 && (
               <div className="col-span-full text-center text-sm text-[hsl(var(--muted-foreground))] py-12">No items match your search.</div>
             )}
@@ -116,13 +111,13 @@ export default function Order() {
             <button
               onClick={() => setOrderType("dine-in")}
               className={`flex-1 h-9 rounded-[8px] text-xs font-medium border-2 transition-colors ${
-                orderType === "dine-in" ? "border-[#FF7A12] bg-[#FFF3EA] text-[#FF7A12]" : "border-[#E7DFD7] text-[hsl(var(--muted-foreground))]"
+                orderType === "dine-in" ? "border-[hsl(var(--accent))] bg-[hsl(var(--secondary))] text-[hsl(var(--accent))]" : "border-[#E7DFD7] text-[hsl(var(--muted-foreground))]"
               }`}
             >Dine-in</button>
             <button
               onClick={() => setOrderType("takeaway")}
               className={`flex-1 h-9 rounded-[8px] text-xs font-medium border-2 transition-colors ${
-                orderType === "takeaway" ? "border-[#FF7A12] bg-[#FFF3EA] text-[#FF7A12]" : "border-[#E7DFD7] text-[hsl(var(--muted-foreground))]"
+                orderType === "takeaway" ? "border-[hsl(var(--accent))] bg-[hsl(var(--secondary))] text-[hsl(var(--accent))]" : "border-[#E7DFD7] text-[hsl(var(--muted-foreground))]"
               }`}
             >Takeaway</button>
           </div>
@@ -131,7 +126,7 @@ export default function Order() {
               value={table}
               onChange={(e) => setTable(e.target.value)}
               placeholder="Table number"
-              className="w-full h-9 mt-2 px-3 rounded-[8px] border border-[hsl(var(--border))] text-sm focus:outline-none focus:border-[#FF7A12]"
+              className="w-full h-9 mt-2 px-3 rounded-[8px] border border-[hsl(var(--border))] text-sm focus:outline-none focus:border-[hsl(var(--primary))]"
             />
           )}
         </div>
@@ -146,7 +141,7 @@ export default function Order() {
           {items.map((line) => (
             <div key={line.lineId} className="rounded-[12px] border border-[hsl(var(--border))] p-3">
               <div className="flex items-start gap-2">
-                <span className="text-lg">{line.icon}</span>
+                <img src={line.image} alt={line.name} className="w-10 h-10 rounded-[8px] object-cover shrink-0 bg-[hsl(var(--muted))]" />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium text-[hsl(var(--foreground))]">{line.name}</div>
                   <div className="text-[11px] text-[hsl(var(--muted-foreground))] mt-0.5">
@@ -155,7 +150,7 @@ export default function Order() {
                   {line.addons.length > 0 && (
                     <div className="text-[11px] text-[hsl(var(--muted-foreground))]">+ {line.addons.map((a) => a.name).join(", ")}</div>
                   )}
-                  {line.note && <div className="text-[11px] text-[#FF7A12] mt-1 italic">“{line.note}”</div>}
+                  {line.note && <div className="text-[11px] text-[hsl(var(--accent))] mt-1 italic">“{line.note}”</div>}
                 </div>
                 <div className="text-sm font-medium text-[hsl(var(--foreground))]">{formatPrice(line.lineTotal)}</div>
               </div>
@@ -185,7 +180,7 @@ export default function Order() {
           <button
             onClick={() => navigate("/payment")}
             disabled={items.length === 0}
-            className="w-full h-12 rounded-[10px] bg-[#FF7A12] text-white text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-40 mt-2 hover:opacity-90 transition-opacity"
+            className="w-full h-12 rounded-[10px] bg-[hsl(var(--primary))] text-white text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-40 mt-2 hover:opacity-90 transition-opacity"
           >
             Send to payment <ArrowRight size={16} strokeWidth={1.5} />
           </button>
@@ -206,7 +201,7 @@ function Row({ label, value, muted, accent }) {
   return (
     <div className="flex items-center justify-between">
       <span className="text-[13px] text-[hsl(var(--muted-foreground))]">{label}</span>
-      <span className={`text-sm ${accent ? "text-[#FF7A12]" : muted ? "text-[hsl(var(--muted-foreground))]" : "text-[#2F241F]"}`}>{value}</span>
+      <span className={`text-sm ${accent ? "text-[hsl(var(--accent))]" : muted ? "text-[hsl(var(--muted-foreground))]" : "text-[#2F241F]"}`}>{value}</span>
     </div>
   );
 }
@@ -217,10 +212,10 @@ function NoteModal({ line, onClose, onSave }) {
     <div className="fixed inset-0 bg-black/30 z-50 flex items-end sm:items-center justify-center" onClick={onClose}>
       <div className="bg-[hsl(var(--card))] w-full sm:max-w-md rounded-t-[16px] sm:rounded-[12px] border border-[hsl(var(--border))] p-5" onClick={(e) => e.stopPropagation()}>
         <div className="text-sm font-medium mb-3">Note for {line.name}</div>
-        <textarea value={text} onChange={(e) => setText(e.target.value)} rows={3} placeholder="e.g. no whipped cream" className="w-full rounded-[8px] border border-[hsl(var(--border))] p-3 text-sm focus:outline-none focus:border-[#FF7A12]" />
+        <textarea value={text} onChange={(e) => setText(e.target.value)} rows={3} placeholder="e.g. no whipped cream" className="w-full rounded-[8px] border border-[hsl(var(--border))] p-3 text-sm focus:outline-none focus:border-[hsl(var(--primary))]" />
         <div className="flex gap-2 mt-3">
           <button onClick={onClose} className="flex-1 h-10 rounded-[8px] border border-[hsl(var(--border))] text-sm">Cancel</button>
-          <button onClick={() => onSave(text)} className="flex-1 h-10 rounded-[8px] bg-[#FF7A12] text-white text-sm">Save note</button>
+          <button onClick={() => onSave(text)} className="flex-1 h-10 rounded-[8px] bg-[hsl(var(--primary))] text-white text-sm">Save note</button>
         </div>
       </div>
     </div>
