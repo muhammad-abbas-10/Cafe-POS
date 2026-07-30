@@ -5,7 +5,7 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import { appParams } from '@/lib/app-params';
 
 const AuthContext = createContext();
-
+const mockUser = { id: '...', name: '...', role: '...' };
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(mockUser);
   const [isAuthenticated, setIsAuthenticated] = useState(true);
