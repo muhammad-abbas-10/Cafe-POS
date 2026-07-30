@@ -57,7 +57,7 @@ export default function StaffShift() {
             {staff.map((s) => {
               const initials = s.name.split(" ").map((n) => n[0]).join("");
               const statusClass = s.clockedIn
-                ? "bg-[#E3F0E7] text-[#3E7A4F]"
+                ? "bg-[#173321] text-[#6FCB86]"
                 : "bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]";
               const btnClass = s.clockedIn
                 ? "border-[hsl(var(--border))]"

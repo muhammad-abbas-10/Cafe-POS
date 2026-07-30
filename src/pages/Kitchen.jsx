@@ -10,8 +10,8 @@ const STATUS_FLOW = ["new", "preparing", "ready", "completed"];
 const STATUS_LABEL = { new: "New", preparing: "Preparing", ready: "Ready", completed: "Completed" };
 const STATUS_PILL = {
   new: "bg-[hsl(var(--secondary))] text-[hsl(var(--accent))]",
-  preparing: "bg-[#FBE9D5] text-[#C46A1A]",
-  ready: "bg-[#E3F0E7] text-[#3E7A4F]",
+  preparing: "bg-[#3A2A16] text-[#E2954D]",
+  ready: "bg-[#173321] text-[#6FCB86]",
   completed: "bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]",
 };
 

@@ -39,9 +39,9 @@ export default function Inventory() {
       </div>
 
       {lowCount > 0 && (
-        <div className="flex items-center gap-2 mb-4 rounded-[12px] border border-[#E8C9A8] bg-[#FBE9D5] px-4 py-3">
-          <AlertTriangle size={18} strokeWidth={1.5} className="text-[#C46A1A]" />
-          <span className="text-sm text-[#C46A1A]">Some ingredients are below their reorder threshold.</span>
+        <div className="flex items-center gap-2 mb-4 rounded-[12px] border border-[#5C4326] bg-[#3A2A16] px-4 py-3">
+          <AlertTriangle size={18} strokeWidth={1.5} className="text-[#E2954D]" />
+          <span className="text-sm text-[#E2954D]">Some ingredients are below their reorder threshold.</span>
         </div>
       )}
 
@@ -65,8 +65,8 @@ export default function Inventory() {
                   <tr key={s.id} className="border-b border-[hsl(var(--border))] last:border-0">
                     <td className="px-4 py-3 font-medium">{s.name}</td>
                     <td className="px-4 py-3">
-                      <span className={low ? "text-[#C46A1A] font-medium" : ""}>{s.stock} {s.unit}</span>
-                      {low && <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full bg-[#F8E3E3] text-[#A14B4B]">Low</span>}
+                      <span className={low ? "text-[#E2954D] font-medium" : ""}>{s.stock} {s.unit}</span>
+                      {low && <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full bg-[#3A1F1F] text-[#E38585]">Low</span>}
                     </td>
                     <td className="px-4 py-3 text-[hsl(var(--muted-foreground))]">{s.threshold} {s.unit}</td>
                     <td className="px-4 py-3 text-xs text-[hsl(var(--muted-foreground))]">{linkedNames.length ? linkedNames.join(", ") : "—"}</td>

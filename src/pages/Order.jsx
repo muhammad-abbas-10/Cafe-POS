@@ -57,10 +57,10 @@ export default function Order() {
                 className={`shrink-0 h-14 px-4 rounded-[12px] flex items-center gap-2 border-2 transition-colors ${
                   active
                     ? "border-[hsl(var(--accent))] bg-[hsl(var(--secondary))] text-[hsl(var(--accent))]"
-                    : "border-[#E7DFD7] bg-[hsl(var(--card))] text-[#2F241F] hover:bg-[hsl(var(--secondary))]"
+                    : "border-[#3A322C] bg-[hsl(var(--card))] text-[#F3EAE3] hover:bg-[hsl(var(--secondary))]"
                 }`}
               >
-                <Icon size={20} strokeWidth={1.5} className="text-[#2F241F]" />
+                <Icon size={20} strokeWidth={1.5} className="text-[#F3EAE3]" />
                 <span className="text-sm font-medium">{c.name}</span>
               </button>
             );
@@ -74,7 +74,7 @@ export default function Order() {
               <button
                 key={item.id}
                 onClick={() => setModifierItem(item)}
-                className="text-left rounded-[16px] bg-[hsl(var(--card))] border border-[#E7DFD7] p-4 hover:border-[hsl(var(--primary))] transition-colors"
+                className="text-left rounded-[16px] bg-[hsl(var(--card))] border border-[#3A322C] p-4 hover:border-[hsl(var(--primary))] transition-colors"
               >
                 <div className="flex items-start gap-3">
                   <img
@@ -83,7 +83,7 @@ export default function Order() {
                     className="w-16 h-16 rounded-[12px] object-cover shrink-0 bg-[hsl(var(--muted))]"
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="text-[15px] font-medium text-[#2F241F] truncate">{item.name}</div>
+                    <div className="text-[15px] font-medium text-[#F3EAE3] truncate">{item.name}</div>
                     <div className="text-xs text-[hsl(var(--muted-foreground))] line-clamp-1 mt-0.5">{item.description}</div>
                     <div className="text-[15px] font-medium text-[hsl(var(--primary))] mt-1.5">{formatPrice(item.price)}</div>
                   </div>
@@ -98,10 +98,10 @@ export default function Order() {
       </div>
 
       {/* Right bill panel — single instance */}
-      <div className="w-[360px] shrink-0 border-l border-[#E7DFD7] bg-[hsl(var(--card))] flex flex-col">
-        <div className="p-5 pb-4 border-b border-[#E7DFD7]">
+      <div className="w-[360px] shrink-0 border-l border-[#3A322C] bg-[hsl(var(--card))] flex flex-col">
+        <div className="p-5 pb-4 border-b border-[#3A322C]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[hsl(var(--muted))] flex items-center justify-center text-[#2F241F] font-medium">CM</div>
+            <div className="w-10 h-10 rounded-full bg-[hsl(var(--muted))] flex items-center justify-center text-[#F3EAE3] font-medium">CM</div>
             <div>
               <div className="text-sm font-medium text-[hsl(var(--foreground))]">Counter 1</div>
               <div className="text-xs text-[hsl(var(--muted-foreground))]">Cashier · Live session</div>
@@ -111,13 +111,13 @@ export default function Order() {
             <button
               onClick={() => setOrderType("dine-in")}
               className={`flex-1 h-9 rounded-[8px] text-xs font-medium border-2 transition-colors ${
-                orderType === "dine-in" ? "border-[hsl(var(--accent))] bg-[hsl(var(--secondary))] text-[hsl(var(--accent))]" : "border-[#E7DFD7] text-[hsl(var(--muted-foreground))]"
+                orderType === "dine-in" ? "border-[hsl(var(--accent))] bg-[hsl(var(--secondary))] text-[hsl(var(--accent))]" : "border-[#3A322C] text-[hsl(var(--muted-foreground))]"
               }`}
             >Dine-in</button>
             <button
               onClick={() => setOrderType("takeaway")}
               className={`flex-1 h-9 rounded-[8px] text-xs font-medium border-2 transition-colors ${
-                orderType === "takeaway" ? "border-[hsl(var(--accent))] bg-[hsl(var(--secondary))] text-[hsl(var(--accent))]" : "border-[#E7DFD7] text-[hsl(var(--muted-foreground))]"
+                orderType === "takeaway" ? "border-[hsl(var(--accent))] bg-[hsl(var(--secondary))] text-[hsl(var(--accent))]" : "border-[#3A322C] text-[hsl(var(--muted-foreground))]"
               }`}
             >Takeaway</button>
           </div>
@@ -134,7 +134,7 @@ export default function Order() {
         <div className="flex-1 overflow-y-auto no-scrollbar p-5 space-y-3">
           {items.length === 0 && (
             <div className="min-h-full flex flex-col items-center justify-center text-center gap-3">
-              <ShoppingBag size={28} strokeWidth={1.5} className="text-[#8A8178]" />
+              <ShoppingBag size={28} strokeWidth={1.5} className="text-[#A89C8E]" />
               <span className="text-sm text-[hsl(var(--muted-foreground))]">Tap an item to start building the bill.</span>
             </div>
           )}
@@ -169,13 +169,13 @@ export default function Order() {
           ))}
         </div>
 
-        <div className="p-5 border-t border-[#E7DFD7] space-y-2">
+        <div className="p-5 border-t border-[#3A322C] space-y-2">
           <Row label="Subtotal" value={formatPrice(totals.subtotal)} />
           {billDiscount && <Row label={`Discount (${billDiscount.code})`} value={`−${formatPrice(totals.discountAmount)}`} accent />}
           <Row label="Tax (8%)" value={formatPrice(totals.tax)} muted />
-          <div className="flex items-center justify-between pt-2 border-t border-[#E7DFD7]">
-            <span className="text-sm font-medium text-[#2F241F]">Total</span>
-            <span className="text-[22px] font-medium text-[#2F241F]">{formatPrice(totals.total)}</span>
+          <div className="flex items-center justify-between pt-2 border-t border-[#3A322C]">
+            <span className="text-sm font-medium text-[#F3EAE3]">Total</span>
+            <span className="text-[22px] font-medium text-[#F3EAE3]">{formatPrice(totals.total)}</span>
           </div>
           <button
             onClick={() => navigate("/payment")}
@@ -201,7 +201,7 @@ function Row({ label, value, muted, accent }) {
   return (
     <div className="flex items-center justify-between">
       <span className="text-[13px] text-[hsl(var(--muted-foreground))]">{label}</span>
-      <span className={`text-sm ${accent ? "text-[hsl(var(--accent))]" : muted ? "text-[hsl(var(--muted-foreground))]" : "text-[#2F241F]"}`}>{value}</span>
+      <span className={`text-sm ${accent ? "text-[hsl(var(--accent))]" : muted ? "text-[hsl(var(--muted-foreground))]" : "text-[#F3EAE3]"}`}>{value}</span>
     </div>
   );
 }

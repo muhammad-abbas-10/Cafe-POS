@@ -76,7 +76,7 @@ export default function History() {
                 <td className="px-4 py-3">{o.table_number || "—"}</td>
                 <td className="px-4 py-3 capitalize">{METHOD_LABEL[o.payment_method] || o.payment_method}</td>
                 <td className="px-4 py-3">
-                  <span className={`text-[10px] px-2 py-1 rounded-full ${o.status === "cancelled" ? "bg-[#F8E3E3] text-[#A14B4B]" : "bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]"}`}>{o.status}</span>
+                  <span className={`text-[10px] px-2 py-1 rounded-full ${o.status === "cancelled" ? "bg-[#3A1F1F] text-[#E38585]" : "bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]"}`}>{o.status}</span>
                 </td>
                 <td className="px-4 py-3 text-right font-medium">{formatPrice(o.total)}</td>
                 <td className="px-4 py-3">

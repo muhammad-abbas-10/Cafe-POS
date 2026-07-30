@@ -4,44 +4,44 @@
 
 @layer base {
   :root {
-    --background: 40 33% 95%;
-    --foreground: 20 21% 15%;
-    --card: 40 60% 99%;
-    --card-foreground: 20 21% 15%;
-    --popover: 40 60% 99%;
-    --popover-foreground: 20 21% 15%;
-    --primary: 14 45% 24%;
-    --primary-foreground: 40 60% 99%;
-    --secondary: 353 33% 93%;
-    --secondary-foreground: 20 21% 15%;
-    --muted: 40 14% 92%;
-    --muted-foreground: 30 7% 51%;
-    --accent: 14 45% 24%;
-    --accent-foreground: 40 60% 99%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 40 60% 99%;
-    --border: 30 22% 87%;
-    --input: 30 22% 87%;
-    --ring: 25 100% 54%;
-    --chart-1: 25 100% 54%;
-    --chart-2: 173 40% 45%;
-    --chart-3: 197 37% 40%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 340 60% 60%;
-    --radius: 0.75rem;
-    --font-heading: ui-sans-serif, system-ui, sans-serif;
-    --font-body: ui-sans-serif, system-ui, sans-serif;
-    --font-display: ui-sans-serif, system-ui, sans-serif;
-    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    --sidebar-background: 40 33% 95%;
-    --sidebar-foreground: 30 7% 51%;
-    --sidebar-primary: 14 45% 24%;
-    --sidebar-primary-foreground: 40 60% 99%;
-    --sidebar-accent: 353 33% 93%;
-    --sidebar-accent-foreground: 20 21% 15%;
-    --sidebar-border: 30 22% 87%;
-    --sidebar-ring: 25 100% 54%;
-  }
+  --background: 20 14% 10%;
+  --foreground: 30 25% 92%;
+  --card: 20 13% 13%;
+  --card-foreground: 30 25% 92%;
+  --popover: 20 13% 13%;
+  --popover-foreground: 30 25% 92%;
+  --primary: 14 40% 42%;
+  --primary-foreground: 30 25% 96%;
+  --secondary: 20 13% 18%;
+  --secondary-foreground: 30 25% 92%;
+  --muted: 20 10% 17%;
+  --muted-foreground: 30 10% 65%;
+  --accent: 14 40% 42%;
+  --accent-foreground: 30 25% 96%;
+  --destructive: 0 62% 50%;
+  --destructive-foreground: 30 25% 96%;
+  --border: 20 10% 22%;
+  --input: 20 10% 22%;
+  --ring: 14 40% 42%;
+  --chart-1: 25 80% 55%;
+  --chart-2: 173 40% 45%;
+  --chart-3: 197 37% 45%;
+  --chart-4: 43 60% 60%;
+  --chart-5: 340 55% 60%;
+  --radius: 0.75rem;
+  --font-heading: ui-sans-serif, system-ui, sans-serif;
+  --font-body: ui-sans-serif, system-ui, sans-serif;
+  --font-display: ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --sidebar-background: 20 14% 10%;
+  --sidebar-foreground: 30 10% 65%;
+  --sidebar-primary: 14 40% 42%;
+  --sidebar-primary-foreground: 30 25% 96%;
+  --sidebar-accent: 20 13% 18%;
+  --sidebar-accent-foreground: 30 25% 92%;
+  --sidebar-border: 20 10% 22%;
+  --sidebar-ring: 14 40% 42%;
+}
 }
 
 @layer base {

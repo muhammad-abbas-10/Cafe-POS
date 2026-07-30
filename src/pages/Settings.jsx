@@ -42,9 +42,9 @@ export default function Settings() {
 
       <Section icon={ShieldCheck} title="Security & PCI">
         <div className="space-y-2 text-xs text-[hsl(var(--muted-foreground))]">
-          <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#3E7A4F]" /> Card data handled by payment processor — never stored locally.</div>
-          <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#3E7A4F]" /> Role-based access enforced across all screens.</div>
-          <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#3E7A4F]" /> All stock & price changes are audit-logged.</div>
+          <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#6FCB86]" /> Card data handled by payment processor — never stored locally.</div>
+          <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#6FCB86]" /> Role-based access enforced across all screens.</div>
+          <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#6FCB86]" /> All stock & price changes are audit-logged.</div>
         </div>
       </Section>
 

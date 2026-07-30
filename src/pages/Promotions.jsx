@@ -37,7 +37,7 @@ export default function Promotions() {
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium tracking-wide">{p.code}</span>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full ${p.active ? "bg-[#E3F0E7] text-[#3E7A4F]" : "bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]"}`}>{p.active ? "Active" : "Paused"}</span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full ${p.active ? "bg-[#173321] text-[#6FCB86]" : "bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]"}`}>{p.active ? "Active" : "Paused"}</span>
                   </div>
                   <div className="text-xs text-[hsl(var(--muted-foreground))] mt-0.5">{p.description}</div>
                   <div className="text-xs text-[hsl(var(--muted-foreground))] mt-0.5">{p.type === "percent" ? `${p.value}% off` : `$${p.value} off`} · {p.start} → {p.end}</div>

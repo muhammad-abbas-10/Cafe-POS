@@ -41,7 +41,7 @@ export default function Sidebar({ role, onRoleChange }) {
               `group relative w-14 h-14 rounded-2xl flex flex-col items-center justify-center transition-colors ${
                 isActive
                   ? "bg-[hsl(var(--primary))] text-white shadow-sm"
-                  : "text-[#8A8178] hover:bg-[hsl(var(--muted))]"
+                  : "text-[#A89C8E] hover:bg-[hsl(var(--muted))]"
               }`
             }
           >
@@ -70,7 +70,7 @@ function RoleSwitcher({ role, onRoleChange }) {
     <div className="relative mb-1">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="w-12 h-7 rounded-lg border border-[#E7DFD7] text-[10px] font-medium text-[#8A8178] flex items-center justify-center"
+        className="w-12 h-7 rounded-lg border border-[#3A322C] text-[10px] font-medium text-[#A89C8E] flex items-center justify-center"
       >
         {ROLE_LABEL[role]}
       </button>
@@ -81,7 +81,7 @@ function RoleSwitcher({ role, onRoleChange }) {
               key={r}
               onClick={() => { onRoleChange(r); setOpen(false); }}
               className={`block w-full text-left px-3 py-1.5 text-xs hover:bg-[hsl(var(--muted))] ${
-                role === r ? "text-[hsl(var(--primary))] font-medium" : "text-[#2F241F]"
+                role === r ? "text-[hsl(var(--primary))] font-medium" : "text-[#F3EAE3]"
               }`}
             >
               {ROLE_LABEL[r]}
