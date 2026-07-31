@@ -14,7 +14,7 @@ export default function Layout() {
     <CartProvider>
       <div className="min-h-screen bg-[hsl(var(--background))]">
         <Sidebar role={role} onRoleChange={setRole} />
-        <main className="ml-[76px] min-h-screen">
+        <main className="md:ml-[76px] min-h-screen pb-20 md:pb-0">
           <Outlet context={{ role }} />
         </main>
       </div>

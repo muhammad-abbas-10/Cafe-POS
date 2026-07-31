@@ -51,6 +51,13 @@
   body {
     @apply bg-background text-foreground font-body antialiased;
   }
+  input, select, textarea {
+    background-color: #fff;
+    color: #2F241F;
+  }
+  input::placeholder, textarea::placeholder {
+    color: #8A8178;
+  }
 }
 
 @layer utilities {

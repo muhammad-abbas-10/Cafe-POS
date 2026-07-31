@@ -16,6 +16,7 @@ export default function Order() {
   const [query, setQuery] = useState("");
   const [modifierItem, setModifierItem] = useState(null);
   const [noteFor, setNoteFor] = useState(null);
+  const [mobileCartOpen, setMobileCartOpen] = useState(false);
 
   const filtered = useMemo(() => {
     let list = MENU_ITEMS.filter((m) => m.available);
@@ -29,9 +30,9 @@ export default function Order() {
   }, [activeCat, query]);
 
   return (
-    <div className="flex h-screen">
+    <div className="flex flex-col md:flex-row md:h-screen">
       {/* Center column */}
-      <div className="flex-1 flex flex-col overflow-hidden px-8 py-7">
+      <div className="flex-1 flex flex-col md:overflow-hidden px-4 py-5 md:px-8 md:py-7">
         <div className="flex items-center justify-between gap-4 mb-5">
           <h1 className="text-[28px] font-medium text-[hsl(var(--foreground))]">Choose category</h1>
           <div className="relative w-72">
@@ -69,7 +70,7 @@ export default function Order() {
 
         {/* Item grid */}
         <div className="flex-1 overflow-y-auto no-scrollbar">
-          <div className="grid grid-cols-2 xl:grid-cols-3 gap-4 pb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 pb-24 md:pb-4">
             {filtered.map((item) => (
               <button
                 key={item.id}
@@ -98,7 +99,15 @@ export default function Order() {
       </div>
 
       {/* Right bill panel — single instance */}
-      <div className="w-[360px] shrink-0 border-l border-[#3A322C] bg-[hsl(var(--card))] flex flex-col">
+      {mobileCartOpen && (
+        <div className="md:hidden fixed inset-0 bg-black/30 z-30" onClick={() => setMobileCartOpen(false)} />
+      )}
+      <div
+        className={`fixed md:static inset-x-0 bottom-0 md:inset-auto z-40 w-full md:w-[360px] md:shrink-0 border-l border-[#3A322C] bg-[hsl(var(--card))] flex flex-col max-h-[85vh] md:max-h-none rounded-t-2xl md:rounded-none transition-transform duration-300 ${mobileCartOpen ? "translate-y-0" : "translate-y-full"} md:translate-y-0`}
+      >
+        <div className="md:hidden flex items-center justify-center py-2">
+          <div className="w-10 h-1 rounded-full bg-[hsl(var(--border))]" />
+        </div>
         <div className="p-5 pb-4 border-b border-[#3A322C]">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-[hsl(var(--muted))] flex items-center justify-center text-[#F3EAE3] font-medium">CM</div>
@@ -178,7 +187,7 @@ export default function Order() {
             <span className="text-[22px] font-medium text-[#F3EAE3]">{formatPrice(totals.total)}</span>
           </div>
           <button
-            onClick={() => navigate("/payment")}
+            onClick={() => { setMobileCartOpen(false); navigate("/payment"); }}
             disabled={items.length === 0}
             className="w-full h-12 rounded-[10px] bg-[hsl(var(--primary))] text-white text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-40 mt-2 hover:opacity-90 transition-opacity"
           >
@@ -186,6 +195,16 @@ export default function Order() {
           </button>
         </div>
       </div>
+
+      {!mobileCartOpen && items.length > 0 && (
+        <button
+          onClick={() => setMobileCartOpen(true)}
+          className="md:hidden fixed bottom-4 right-4 z-30 h-14 px-5 rounded-full bg-[hsl(var(--primary))] text-white text-sm font-medium flex items-center gap-2 shadow-lg"
+        >
+          <ShoppingBag size={18} strokeWidth={1.5} />
+          {items.length} item{items.length > 1 ? "s" : ""} · {formatPrice(totals.total)}
+        </button>
+      )}
 
       {modifierItem && (
         <ItemModifierSheet item={modifierItem} onClose={() => setModifierItem(null)} onAdd={(entry) => { addItem(entry); setModifierItem(null); }} />

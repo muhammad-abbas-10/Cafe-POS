@@ -27,7 +27,8 @@ export default function Sidebar({ role, onRoleChange }) {
   const items = NAV.filter((n) => n.roles.includes(role));
 
   return (
-    <aside className="fixed left-0 top-0 bottom-0 w-[76px] flex flex-col items-center py-5 gap-1 bg-[hsl(var(--card))] border-r border-[hsl(var(--border))] z-30">
+    <>
+    <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-[76px] flex-col items-center py-5 gap-1 bg-[hsl(var(--card))] border-r border-[hsl(var(--border))] z-30">
       <div className="w-11 h-11 rounded-xl bg-[hsl(var(--primary))] flex items-center justify-center mb-3 shadow-none">
         <span className="text-white text-xl">☕</span>
       </div>
@@ -61,6 +62,23 @@ export default function Sidebar({ role, onRoleChange }) {
         <LogOut size={20} strokeWidth={1.5} />
       </button>
     </aside>
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-[hsl(var(--card))] border-t border-[hsl(var(--border))] z-30 flex items-center overflow-x-auto no-scrollbar">
+      {items.map(({ to, label, Icon }) => (
+        <NavLink
+          key={to}
+          to={to}
+          className={({ isActive }) =>
+            `shrink-0 flex flex-col items-center justify-center gap-0.5 w-16 h-full ${
+              isActive ? "text-[hsl(var(--primary))]" : "text-[#A89C8E]"
+            }`
+          }
+        >
+          <Icon size={19} strokeWidth={1.5} />
+          <span className="text-[9px] font-medium">{label}</span>
+        </NavLink>
+      ))}
+    </nav>
+    </>
   );
 }
 
