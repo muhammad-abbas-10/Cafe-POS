@@ -1,27 +1,19 @@
 import { db } from "@/lib/db";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Banknote, CreditCard, Wallet, Check, Tag, X } from "lucide-react";
-import { formatPrice, PROMOTIONS } from "@/lib/cafeData";
+import { Banknote, CreditCard, Wallet, Check } from "lucide-react";
+import { formatPrice } from "@/lib/cafeData";
 import { useCart } from "@/lib/CartContext";
+import Receipt from "@/components/Receipt";
 
 export default function Payment() {
   const navigate = useNavigate();
-  const { items, totals, orderType, table, billDiscount, setBillDiscount, clear } = useCart();
+  const { items, totals, orderType, table, billDiscount, clear } = useCart();
   const [method, setMethod] = useState("cash");
   const [split, setSplit] = useState(null); // { method1, amount1 }
-  const [promoInput, setPromoInput] = useState("");
-  const [promoMsg, setPromoMsg] = useState(null);
   const [confirming, setConfirming] = useState(false);
-
-  const handleApplyPromo = () => {
-    const code = promoInput.trim().toUpperCase();
-    const p = PROMOTIONS.find((x) => x.code === code && x.active);
-    if (!p) { setPromoMsg({ ok: false, text: "Invalid or expired code" }); return; }
-    setBillDiscount({ code: p.code, type: p.type, value: p.value });
-    setPromoMsg({ ok: true, text: `${p.code} applied` });
-  };
+  const [receipt, setReceipt] = useState(null);
 
   const handleConfirm = async () => {
     setConfirming(true);
@@ -29,14 +21,15 @@ export default function Payment() {
     const payload = {
       order_number: orderNumber,
       order_type: orderType,
-      table_number: orderType === "dine-in" ? table || "—" : "Takeaway",
+      table_number: orderType === "dine-in" ? table || "—" : orderType === "delivery" ? table || "no address" : "Takeaway",
       status: "new",
       items: items.map((l) => ({
-        name: l.name, icon: l.icon, qty: l.qty, unitPrice: l.unitPrice, lineTotal: l.lineTotal,
+        name: l.name, image: l.image, qty: l.qty, unitPrice: l.unitPrice, lineTotal: l.lineTotal,
         size: l.size?.name, temperature: l.temperature, sugar: l.sugar, ice: l.ice, note: l.note,
       })),
       subtotal: totals.subtotal,
       discount_amount: totals.discountAmount,
+      delivery_fee: totals.deliveryFee,
       discount_code: billDiscount?.code || "",
       tax: totals.tax,
       total: totals.total,
@@ -53,9 +46,15 @@ export default function Payment() {
       localStorage.setItem("pos_pending_orders", JSON.stringify(q));
     }
     setConfirming(false);
-    clear();
-    navigate("/order");
+    setReceipt(payload);
   };
+
+  useEffect(() => {
+    if (!receipt) return;
+    const onAfterPrint = () => { clear(); navigate("/order"); };
+    window.addEventListener("afterprint", onAfterPrint);
+    return () => window.removeEventListener("afterprint", onAfterPrint);
+  }, [receipt, clear, navigate]);
 
   return (
     <div className="min-h-screen px-8 py-7 max-w-3xl mx-auto">
@@ -73,14 +72,14 @@ export default function Payment() {
       {/* Single order summary panel */}
       <div className="rounded-[12px] bg-[hsl(var(--card))] border border-[hsl(var(--border))] p-5">
         <div className="flex items-center justify-between mb-4">
-          <div className="text-sm font-medium">{orderType === "dine-in" ? `Table ${table || "—"}` : "Takeaway"}</div>
+          <div className="text-sm font-medium">{orderType === "dine-in" ? `Table ${table || "—"}` : orderType === "delivery" ? `Delivery — ${table || "no address"}` : "Takeaway"}</div>
           <div className="text-xs text-[hsl(var(--muted-foreground))]">{items.length} items</div>
         </div>
         <div className="space-y-2">
           {items.map((l) => (
             <div key={l.lineId} className="flex items-start justify-between text-sm">
               <div className="flex items-start gap-2">
-                <span>{l.icon}</span>
+                <img src={l.image} alt={l.name} className="w-6 h-6 rounded-[6px] object-cover" />
                 <div>
                   <span>{l.qty}× {l.name}</span>
                   {l.note && <span className="block text-[11px] text-[hsl(var(--accent))] italic">“{l.note}”</span>}
@@ -92,6 +91,7 @@ export default function Payment() {
         </div>
         <div className="border-t border-[hsl(var(--border))] mt-4 pt-3 space-y-1.5">
           <SummaryRow label="Subtotal" value={formatPrice(totals.subtotal)} />
+          {totals.deliveryFee > 0 && <SummaryRow label="Delivery fee" value={formatPrice(totals.deliveryFee)} />}
           {billDiscount && <SummaryRow label={`Discount · ${billDiscount.code}`} value={`−${formatPrice(totals.discountAmount)}`} accent />}
           <SummaryRow label="Tax (8%)" value={formatPrice(totals.tax)} muted />
           <div className="flex items-center justify-between pt-2">
@@ -100,19 +100,6 @@ export default function Payment() {
           </div>
         </div>
       </div>
-
-      {/* Promo */}
-      <div className="mt-4 flex gap-2">
-        <div className="relative flex-1">
-          <Tag size={16} strokeWidth={1.5} className="absolute left-3 top-1/2 -translate-y-1/2 text-[hsl(var(--muted-foreground))]" />
-          <input value={promoInput} onChange={(e) => setPromoInput(e.target.value)} placeholder="Promo code" className="w-full h-11 pl-9 pr-3 rounded-[10px] border border-[hsl(var(--border))] text-sm focus:outline-none focus:border-[hsl(var(--primary))]" />
-        </div>
-        <button onClick={handleApplyPromo} className="h-11 px-4 rounded-[10px] border border-[hsl(var(--border))] text-sm">Apply</button>
-        {billDiscount && (
-          <button onClick={() => { setBillDiscount(null); setPromoInput(""); setPromoMsg(null); }} className="h-11 px-3 rounded-[10px] border border-[hsl(var(--border))] text-sm text-[hsl(var(--muted-foreground))]"><X size={16} strokeWidth={1.5} /></button>
-        )}
-      </div>
-      {promoMsg && <div className={`text-xs mt-1.5 ${promoMsg.ok ? "text-[hsl(var(--accent))]" : "text-[hsl(var(--destructive))]"}`}>{promoMsg.text}</div>}
 
       {/* Payment method — only here */}
       <div className="mt-5">
@@ -148,14 +135,16 @@ export default function Payment() {
 
       {/* Actions */}
       <div className="mt-6">
-        <button onClick={handleConfirm} disabled={confirming || items.length === 0} className="w-full h-12 rounded-[10px] bg-[hsl(var(--primary))] text-white text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-40">
+        <button onClick={handleConfirm} disabled={confirming || items.length === 0 || receipt} className="w-full h-12 rounded-[10px] bg-[hsl(var(--primary))] text-white text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-40">
           <Check size={16} strokeWidth={1.5} /> {confirming ? "Processing…" : `Confirm payment · ${formatPrice(totals.total)}`}
         </button>
         <div className="grid grid-cols-2 gap-3 mt-2">
           <button onClick={() => navigate("/order")} className="h-11 rounded-[10px] border border-[hsl(var(--border))] text-sm">Save for later</button>
           <button onClick={() => navigate("/order")} className="h-11 rounded-[10px] border border-[hsl(var(--border))] text-sm">Cancel</button>
         </div>
+        {receipt && <button onClick={() => window.print()} className="w-full h-12 rounded-[10px] bg-[hsl(var(--primary))] text-white text-sm font-medium mt-3">Print receipt</button>}
       </div>
+      <Receipt order={receipt} />
     </div>
   );
 }

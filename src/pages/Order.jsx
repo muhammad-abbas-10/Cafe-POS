@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Plus, Minus, Trash2, StickyNote, ArrowRight, Coffee, CupSoda, GlassWater, Utensils, Cookie, Cake, ShoppingBag } from "lucide-react";
-import { CATEGORIES, MENU_ITEMS, formatPrice } from "@/lib/cafeData";
+import { formatPrice } from "@/lib/cafeData";
+import { loadCategories, loadItems } from "@/lib/catalogStore";
 import { useCart } from "@/lib/CartContext";
 import ItemModifierSheet from "@/components/ItemModifierSheet";
 
@@ -12,14 +13,16 @@ const CATEGORY_ICON = {
 export default function Order() {
   const navigate = useNavigate();
   const { items, addItem, totals, orderType, setOrderType, table, setTable, removeLine, updateLine, setLineNote, billDiscount } = useCart();
-  const [activeCat, setActiveCat] = useState("coffee");
+  const [categories] = useState(loadCategories);
+  const [menuItems] = useState(loadItems);
+  const [activeCat, setActiveCat] = useState(() => loadCategories()[0]?.id || "coffee");
   const [query, setQuery] = useState("");
   const [modifierItem, setModifierItem] = useState(null);
   const [noteFor, setNoteFor] = useState(null);
   const [mobileCartOpen, setMobileCartOpen] = useState(false);
 
   const filtered = useMemo(() => {
-    let list = MENU_ITEMS.filter((m) => m.available);
+    let list = menuItems.filter((m) => m.available);
     if (query.trim()) {
       const q = query.toLowerCase();
       list = list.filter((m) => m.name.toLowerCase().includes(q) || m.description.toLowerCase().includes(q));
@@ -27,7 +30,7 @@ export default function Order() {
       list = list.filter((m) => m.category === activeCat);
     }
     return list;
-  }, [activeCat, query]);
+  }, [activeCat, menuItems, query]);
 
   return (
     <div className="flex flex-col md:flex-row md:h-screen">
@@ -48,7 +51,7 @@ export default function Order() {
 
         {/* Category chips */}
         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-3 mb-4">
-          {CATEGORIES.map((c) => {
+          {categories.map((c) => {
             const active = !query && activeCat === c.id;
             const Icon = CATEGORY_ICON[c.id] || Coffee;
             return (
@@ -116,25 +119,30 @@ export default function Order() {
               <div className="text-xs text-[hsl(var(--muted-foreground))]">Cashier · Live session</div>
             </div>
           </div>
-          <div className="flex gap-2 mt-3">
-            <button
-              onClick={() => setOrderType("dine-in")}
-              className={`flex-1 h-9 rounded-[8px] text-xs font-medium border-2 transition-colors ${
-                orderType === "dine-in" ? "border-[hsl(var(--accent))] bg-[hsl(var(--secondary))] text-[hsl(var(--accent))]" : "border-[#3A322C] text-[hsl(var(--muted-foreground))]"
-              }`}
-            >Dine-in</button>
-            <button
-              onClick={() => setOrderType("takeaway")}
-              className={`flex-1 h-9 rounded-[8px] text-xs font-medium border-2 transition-colors ${
-                orderType === "takeaway" ? "border-[hsl(var(--accent))] bg-[hsl(var(--secondary))] text-[hsl(var(--accent))]" : "border-[#3A322C] text-[hsl(var(--muted-foreground))]"
-              }`}
-            >Takeaway</button>
+          <div className="grid grid-cols-3 gap-2 mt-3">
+            {[{ id: "dine-in", label: "Dine-in" }, { id: "takeaway", label: "Takeaway" }, { id: "delivery", label: "Delivery" }].map((type) => (
+              <button
+                key={type.id}
+                onClick={() => setOrderType(type.id)}
+                className={`h-9 rounded-[8px] text-xs font-medium border-2 transition-colors ${
+                  orderType === type.id ? "border-[hsl(var(--accent))] bg-[hsl(var(--secondary))] text-[hsl(var(--accent))]" : "border-[#3A322C] text-[hsl(var(--muted-foreground))]"
+                }`}
+              >{type.label}</button>
+            ))}
           </div>
           {orderType === "dine-in" && (
             <input
               value={table}
               onChange={(e) => setTable(e.target.value)}
               placeholder="Table number"
+              className="w-full h-9 mt-2 px-3 rounded-[8px] border border-[hsl(var(--border))] text-sm focus:outline-none focus:border-[hsl(var(--primary))]"
+            />
+          )}
+          {orderType === "delivery" && (
+            <input
+              value={table}
+              onChange={(e) => setTable(e.target.value)}
+              placeholder="Delivery address"
               className="w-full h-9 mt-2 px-3 rounded-[8px] border border-[hsl(var(--border))] text-sm focus:outline-none focus:border-[hsl(var(--primary))]"
             />
           )}
@@ -180,6 +188,7 @@ export default function Order() {
 
         <div className="p-5 border-t border-[#3A322C] space-y-2">
           <Row label="Subtotal" value={formatPrice(totals.subtotal)} />
+          {totals.deliveryFee > 0 && <Row label="Delivery fee" value={formatPrice(totals.deliveryFee)} />}
           {billDiscount && <Row label={`Discount (${billDiscount.code})`} value={`−${formatPrice(totals.discountAmount)}`} accent />}
           <Row label="Tax (8%)" value={formatPrice(totals.tax)} muted />
           <div className="flex items-center justify-between pt-2 border-t border-[#3A322C]">

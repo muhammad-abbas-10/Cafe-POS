@@ -3,13 +3,12 @@ import { db } from "@/lib/db";
 import React, { useState, useEffect } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
-  ShoppingBag, ChefHat, History, Boxes, BarChart3, UtensilsCrossed,
+  ShoppingBag, History, Boxes, BarChart3, UtensilsCrossed,
   Users, Ticket, Settings, LogOut,
 } from "lucide-react";
 
 const NAV = [
   { to: "/order", label: "Order", Icon: ShoppingBag, roles: ["admin", "manager", "cashier", "kitchen"] },
-  { to: "/kitchen", label: "Kitchen", Icon: ChefHat, roles: ["admin", "manager", "cashier", "kitchen"] },
   { to: "/history", label: "History", Icon: History, roles: ["admin", "manager", "cashier", "kitchen"] },
   { to: "/inventory", label: "Stock", Icon: Boxes, roles: ["admin", "manager", "cashier", "kitchen"] },
   { to: "/reports", label: "Reports", Icon: BarChart3, roles: ["admin", "manager", "cashier", "kitchen"] },
@@ -19,7 +18,7 @@ const NAV = [
   { to: "/settings", label: "Settings", Icon: Settings, roles: ["admin", "manager", "cashier", "kitchen"] },
 ];
 
-const ROLE_HOME = { admin: "/order", manager: "/order", cashier: "/order", kitchen: "/kitchen" };
+const ROLE_HOME = { admin: "/order", manager: "/order", cashier: "/order", kitchen: "/order" };
 const ROLE_LABEL = { admin: "Admin", manager: "Manager", cashier: "Cashier", kitchen: "Kitchen" };
 
 export default function Sidebar({ role, onRoleChange }) {

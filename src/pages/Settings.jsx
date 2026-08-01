@@ -3,12 +3,20 @@ import { Percent, Clock, Printer, ShieldCheck, Save } from "lucide-react";
 
 export default function Settings() {
   const [taxRate, setTaxRate] = useState(() => localStorage.getItem("pos_tax") || "8");
+  const [bizName, setBizName] = useState(() => localStorage.getItem("pos_biz_name") || "Your Café Name");
+  const [bizAddress, setBizAddress] = useState(() => localStorage.getItem("pos_biz_address") || "1234 Main Street, Your City");
+  const [bizPhone, setBizPhone] = useState(() => localStorage.getItem("pos_biz_phone") || "123-456-7890");
+  const [deliveryFee, setDeliveryFee] = useState(() => localStorage.getItem("pos_delivery_fee") || "3.50");
   const [hours, setHours] = useState(() => localStorage.getItem("pos_hours") || "7:00 – 22:00");
   const [printer, setPrinter] = useState(() => localStorage.getItem("pos_printer") || "Star TSP143 (USB)");
   const [saved, setSaved] = useState(false);
 
   const save = () => {
     localStorage.setItem("pos_tax", taxRate);
+    localStorage.setItem("pos_biz_name", bizName);
+    localStorage.setItem("pos_biz_address", bizAddress);
+    localStorage.setItem("pos_biz_phone", bizPhone);
+    localStorage.setItem("pos_delivery_fee", deliveryFee);
     localStorage.setItem("pos_hours", hours);
     localStorage.setItem("pos_printer", printer);
     setSaved(true);
@@ -19,10 +27,26 @@ export default function Settings() {
     <div className="px-8 py-7 max-w-2xl">
       <h1 className="text-[28px] font-medium mb-5">Settings</h1>
 
+      <Section icon={Printer} title="Receipt header">
+        <div className="space-y-2">
+          <input value={bizName} onChange={(e) => setBizName(e.target.value)} placeholder="Business name" className="w-full h-10 px-3 rounded-[8px] border border-[hsl(var(--border))] text-sm" />
+          <input value={bizAddress} onChange={(e) => setBizAddress(e.target.value)} placeholder="Address" className="w-full h-10 px-3 rounded-[8px] border border-[hsl(var(--border))] text-sm" />
+          <input value={bizPhone} onChange={(e) => setBizPhone(e.target.value)} placeholder="Phone" className="w-full h-10 px-3 rounded-[8px] border border-[hsl(var(--border))] text-sm" />
+        </div>
+      </Section>
+
       <Section icon={Percent} title="Tax rate">
         <div className="flex items-center gap-2">
           <input type="number" step="0.1" value={taxRate} onChange={(e) => setTaxRate(e.target.value)} className="w-24 h-10 px-3 rounded-[8px] border border-[hsl(var(--border))] text-sm" />
           <span className="text-sm text-[hsl(var(--muted-foreground))]">% applied to every order subtotal</span>
+        </div>
+      </Section>
+
+      <Section icon={Percent} title="Delivery fee">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-[hsl(var(--muted-foreground))]">$</span>
+          <input type="number" step="0.5" value={deliveryFee} onChange={(e) => setDeliveryFee(e.target.value)} className="w-24 h-10 px-3 rounded-[8px] border border-[hsl(var(--border))] text-sm" />
+          <span className="text-sm text-[hsl(var(--muted-foreground))]">flat fee added to delivery orders</span>
         </div>
       </Section>
 

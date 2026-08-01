@@ -1,18 +1,19 @@
 import React, { useState } from "react";
-import { Plus, Pencil, Power, Trash2, X, LayoutGrid, Coffee, CupSoda, Utensils, Cookie, Cake } from "lucide-react";
-import { CATEGORIES, MENU_ITEMS, formatPrice } from "@/lib/cafeData";
+import { Plus, Pencil, Power, Trash2, X, LayoutGrid, Coffee, CupSoda, Utensils, Cookie, Cake, FolderPlus, Image as ImageIcon } from "lucide-react";
+import { formatPrice } from "@/lib/cafeData";
+import { loadCategories, saveCategories, loadItems, saveItems } from "@/lib/catalogStore";
 const CATEGORY_ICON = {
   all: LayoutGrid, coffee: Coffee, juice: CupSoda, milk: Coffee, rice: Utensils, snack: Cookie, dessert: Cake,
 };
 export default function MenuManagement() {
-  const [items, setItems] = useState(() => {
-    const saved = localStorage.getItem("pos_menu");
-    return saved ? JSON.parse(saved) : MENU_ITEMS;
-  });
+  const [categories, setCategories] = useState(loadCategories);
+  const [items, setItems] = useState(loadItems);
   const [editing, setEditing] = useState(null);
   const [catFilter, setCatFilter] = useState("all");
+  const [manageCats, setManageCats] = useState(false);
 
-  const persist = (next) => { setItems(next); localStorage.setItem("pos_menu", JSON.stringify(next)); };
+  const persist = (next) => { setItems(next); saveItems(next); };
+  const persistCategories = (next) => { setCategories(next); saveCategories(next); };
 
   const toggleAvailable = (id) => persist(items.map((i) => (i.id === id ? { ...i, available: !i.available } : i)));
   const remove = (id) => persist(items.filter((i) => i.id !== id));
@@ -28,13 +29,14 @@ export default function MenuManagement() {
     <div className="px-8 py-7">
       <div className="flex items-center justify-between mb-5">
         <h1 className="text-[28px] font-medium">Menu & categories</h1>
-        <button onClick={() => setEditing({ id: "mi-" + Date.now(), name: "", description: "", price: 0, category: "coffee", available: true, drink: true })} className="h-10 px-4 rounded-[10px] bg-[hsl(var(--primary))] text-white text-sm font-medium flex items-center gap-1.5">
-          <Plus size={16} strokeWidth={1.5} /> Add item
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => setManageCats(true)} className="h-10 px-4 rounded-[10px] border border-[hsl(var(--border))] text-sm font-medium flex items-center gap-1.5"><FolderPlus size={16} strokeWidth={1.5} /> Categories</button>
+          <button onClick={() => setEditing({ id: "mi-" + Date.now(), name: "", description: "", price: 0, category: categories[0]?.id || "coffee", image: "", available: true, drink: true })} className="h-10 px-4 rounded-[10px] bg-[hsl(var(--primary))] text-white text-sm font-medium flex items-center gap-1.5"><Plus size={16} strokeWidth={1.5} /> Add item</button>
+        </div>
       </div>
 
 <div className="flex gap-2 mb-4 overflow-x-auto no-scrollbar">
-  {[{ id: "all", name: "All" }, ...CATEGORIES].map((c) => {
+  {[{ id: "all", name: "All" }, ...categories].map((c) => {
     const Icon = CATEGORY_ICON[c.id] || Coffee;
     const active = catFilter === c.id;
     return (
@@ -68,10 +70,10 @@ export default function MenuManagement() {
                 <td className="px-4 py-3">
                  <div className="flex items-center gap-2"><img src={i.image} alt={i.name} className="w-9 h-9 rounded-[8px] object-cover bg-[hsl(var(--muted))]" /><div><div className="font-medium">{i.name}</div><div className="text-xs text-[hsl(var(--muted-foreground))]">{i.description}</div></div></div>
                 </td>
-                <td className="px-4 py-3 capitalize">{i.category}</td>
+                <td className="px-4 py-3 capitalize">{categories.find((c) => c.id === i.category)?.name || i.category}</td>
                 <td className="px-4 py-3 text-[hsl(var(--accent))] font-medium">{formatPrice(i.price)}</td>
                 <td className="px-4 py-3">
-                  <span className={`text-[10px] px-2 py-1 rounded-full ${i.available ? "bg-[#173321] text-[#6FCB86]" : "bg-[#3A1F1F] text-[#E38585]"}`}>{i.available ? "Available" : "86'd"}</span>
+                  <span className={`text-[10px] px-2 py-1 rounded-full ${i.available ? "bg-[#173321] text-[#6FCB86]" : "bg-[#3A1F1F] text-[#E38585]"}`}>{i.available ? "Available" : "unavailaible"}</span>
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-end gap-1">
@@ -86,14 +88,55 @@ export default function MenuManagement() {
         </table>
       </div>
 
-      {editing && <ItemEditor item={editing} onClose={() => setEditing(null)} onSave={save} />}
+       {editing && <ItemEditor item={editing} categories={categories} onClose={() => setEditing(null)} onSave={save} />}
+       {manageCats && <CategoryManager categories={categories} items={items} onClose={() => setManageCats(false)} onSave={persistCategories} />}
     </div>
   );
 }
 
-function ItemEditor({ item, onClose, onSave }) {
+function CategoryManager({ categories, items, onClose, onSave }) {
+  const [list, setList] = useState(categories);
+  const [newName, setNewName] = useState("");
+
+  const addCategory = () => {
+    const name = newName.trim();
+    if (!name) return;
+    const id = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+    if (!id || list.some((category) => category.id === id)) return;
+    setList([...list, { id, name }]);
+    setNewName("");
+  };
+
+  const removeCategory = (id) => {
+    const inUse = items.filter((item) => item.category === id).length;
+    if (inUse > 0 && !confirm(`${inUse} item(s) use this category. Delete anyway?`)) return;
+    setList(list.filter((category) => category.id !== id));
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center" onClick={onClose}>
+      <div className="bg-[hsl(var(--card))] w-full max-w-md rounded-[12px] border border-[hsl(var(--border))] p-5" onClick={(event) => event.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4"><div className="text-sm font-medium">Manage categories</div><button onClick={onClose}><X size={18} strokeWidth={1.5} /></button></div>
+        <div className="space-y-2 max-h-64 overflow-y-auto no-scrollbar mb-3">
+          {list.map((category) => <div key={category.id} className="flex items-center gap-2"><input value={category.name} onChange={(event) => setList(list.map((entry) => entry.id === category.id ? { ...entry, name: event.target.value } : entry))} className="flex-1 h-9 px-3 rounded-[8px] border border-[hsl(var(--border))] text-sm" /><button onClick={() => removeCategory(category.id)} className="w-9 h-9 rounded-[8px] border border-[hsl(var(--border))] flex items-center justify-center text-[hsl(var(--muted-foreground))]"><Trash2 size={15} strokeWidth={1.5} /></button></div>)}
+        </div>
+        <div className="flex items-center gap-2 mb-4"><input value={newName} onChange={(event) => setNewName(event.target.value)} placeholder="New category name" className="flex-1 h-9 px-3 rounded-[8px] border border-[hsl(var(--border))] text-sm" /><button onClick={addCategory} className="h-9 px-3 rounded-[8px] bg-[hsl(var(--primary))] text-white text-sm flex items-center gap-1"><Plus size={15} strokeWidth={1.5} /> Add</button></div>
+        <div className="flex gap-2"><button onClick={onClose} className="flex-1 h-10 rounded-[8px] border border-[hsl(var(--border))] text-sm">Cancel</button><button onClick={() => { onSave(list); onClose(); }} className="flex-1 h-10 rounded-[8px] bg-[hsl(var(--primary))] text-white text-sm">Save categories</button></div>
+      </div>
+    </div>
+  );
+}
+
+function ItemEditor({ item, categories, onClose, onSave }) {
   const [form, setForm] = useState(item);
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+  const handleImage = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => set("image", reader.result);
+    reader.readAsDataURL(file);
+  };
   return (
     <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center" onClick={onClose}>
       <div className="bg-[hsl(var(--card))] w-full max-w-md rounded-[12px] border border-[hsl(var(--border))] p-5" onClick={(e) => e.stopPropagation()}>
@@ -102,14 +145,18 @@ function ItemEditor({ item, onClose, onSave }) {
           <button onClick={onClose}><X size={18} strokeWidth={1.5} /></button>
         </div>
         <div className="space-y-3">
+          <Field label="Photo"><div className="flex items-center gap-3"><div className="w-16 h-16 rounded-[10px] bg-[hsl(var(--muted))] overflow-hidden flex items-center justify-center shrink-0">{form.image ? <img src={form.image} alt="" className="w-full h-full object-cover" /> : <ImageIcon size={20} strokeWidth={1.5} className="text-[hsl(var(--muted-foreground))]" />}</div><label className="h-9 px-3 rounded-[8px] border border-[hsl(var(--border))] text-xs cursor-pointer flex items-center gap-1.5"><ImageIcon size={14} strokeWidth={1.5} /> Choose photo<input type="file" accept="image/*" onChange={handleImage} className="hidden" /></label></div></Field>
           <Field label="Name"><input value={form.name} onChange={(e) => set("name", e.target.value)} className="input" /></Field>
           <Field label="Description"><input value={form.description} onChange={(e) => set("description", e.target.value)} className="input" /></Field>
-         <Field label="Price ($)"><input type="number" step="0.01" value={form.price} onChange={(e) => set("price", Number(e.target.value))} className="input" /></Field>
+          <Field label="Price ($)"><input type="number" step="0.01" value={form.price} onChange={(e) => set("price", Number(e.target.value))} className="input" /></Field>
+          <Field label="Category"><select value={form.category} onChange={(e) => set("category", e.target.value)} className="input category-select">{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></Field>
+          <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.drink} onChange={(e) => set("drink", e.target.checked)} /> Has drink modifiers</label>
+          <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.available} onChange={(e) => set("available", e.target.checked)} /> Available</label>
         <div className="flex gap-2 mt-4">
           <button onClick={onClose} className="flex-1 h-10 rounded-[8px] border border-[hsl(var(--border))] text-sm">Cancel</button>
           <button onClick={() => onSave(form)} className="flex-1 h-10 rounded-[8px] bg-[hsl(var(--primary))] text-white text-sm">Save</button>
         </div>
-        <style>{`.input{width:100%;height:40px;border-radius:8px;border:1px solid hsl(var(--border));padding:0 12px;font-size:14px;background:transparent;outline:none}.input:focus{border-color:hsl(var(--primary))}`}</style>
+        <style>{`.input{width:100%;height:40px;border-radius:8px;border:1px solid hsl(var(--border));padding:0 12px;font-size:14px;background:transparent;color:hsl(var(--foreground));outline:none}.input:focus{border-color:hsl(var(--primary))}.category-select{background:#2F241F}.category-select option{background:#2F241F;color:#fff}`}</style>
       </div>
     </div>
     </div>

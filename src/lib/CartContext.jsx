@@ -7,7 +7,7 @@ const uid = () => Math.random().toString(36).slice(2, 10);
 
 export function CartProvider({ children }) {
   const [items, setItems] = useState([]);
-  const [orderType, setOrderType] = useState("dine-in"); // dine-in | takeaway
+  const [orderType, setOrderType] = useState("dine-in"); // dine-in | takeaway | delivery
   const [table, setTable] = useState("");
   const [billDiscount, setBillDiscount] = useState(null); // { code, type, value }
 
@@ -70,11 +70,12 @@ export function CartProvider({ children }) {
           ? (subtotal * billDiscount.value) / 100
           : Math.min(billDiscount.value, subtotal);
     }
-    const taxedBase = subtotal - discountAmount;
+    const deliveryFee = orderType === "delivery" ? Number(localStorage.getItem("pos_delivery_fee") || "3.5") : 0;
+    const taxedBase = subtotal - discountAmount + deliveryFee;
     const tax = taxedBase * TAX_RATE;
     const total = taxedBase + tax;
-    return { subtotal, discountAmount, tax, total };
-  }, [items, billDiscount]);
+    return { subtotal, discountAmount, deliveryFee, tax, total };
+  }, [items, billDiscount, orderType]);
 
   const value = {
     items, addItem, updateLine, removeLine, setLineNote, clear,

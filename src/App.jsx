@@ -8,7 +8,6 @@ import ScrollToTop from './components/ScrollToTop';
 import Layout from '@/components/Layout';
 import Order from '@/pages/Order';
 import Payment from '@/pages/Payment';
-import Kitchen from '@/pages/Kitchen';
 import History from '@/pages/History';
 import Inventory from '@/pages/Inventory';
 import Reports from '@/pages/Reports';
@@ -25,7 +24,6 @@ const MainApp = () => {
         <Route path="/" element={<Order />} />
         <Route path="/order" element={<Order />} />
         <Route path="/payment" element={<Payment />} />
-        <Route path="/kitchen" element={<Kitchen />} />
         <Route path="/history" element={<History />} />
         <Route path="/inventory" element={<Inventory />} />
         <Route path="/stock" element={<Navigate to="/inventory" replace />} />
