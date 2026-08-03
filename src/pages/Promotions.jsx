@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Plus, Ticket, Gift, Star, X } from "lucide-react";
+import { Plus, Ticket, Gift, Star, X, Pencil } from "lucide-react";
 import { PROMOTIONS } from "@/lib/cafeData";
 
 export default function Promotions() {
@@ -13,11 +13,20 @@ export default function Promotions() {
   const toggle = (id) => persist(promos.map((p) => (p.id === id ? { ...p, active: !p.active } : p)));
   const save = (p) => { persist(promos.find((x) => x.id === p.id) ? promos.map((x) => (x.id === p.id ? p : x)) : [...promos, p]); setEditing(null); };
 
-  const loyalty = [
-    { name: "Aria Patel", visits: 24, points: 240, reward: "Free coffee" },
-    { name: "Leo Marsh", visits: 11, points: 110, reward: "10% off" },
-    { name: "Nina Costa", visits: 7, points: 70, reward: "—" },
-  ];
+  const [loyalty, setLoyalty] = useState(() => {
+    const saved = localStorage.getItem("pos_loyalty");
+    return saved ? JSON.parse(saved) : [
+      { id: "lm-1", name: "Aria Patel", visits: 24, points: 240, reward: "Free coffee" },
+      { id: "lm-2", name: "Leo Marsh", visits: 11, points: 110, reward: "10% off" },
+      { id: "lm-3", name: "Nina Costa", visits: 7, points: 70, reward: "—" },
+    ];
+  });
+  const [editingMember, setEditingMember] = useState(null);
+  const persistLoyalty = (next) => { setLoyalty(next); localStorage.setItem("pos_loyalty", JSON.stringify(next)); };
+  const saveMember = (member) => {
+    persistLoyalty(loyalty.some((entry) => entry.id === member.id) ? loyalty.map((entry) => (entry.id === member.id ? member : entry)) : [...loyalty, member]);
+    setEditingMember(null);
+  };
 
   return (
     <div className="px-8 py-7">
@@ -40,7 +49,7 @@ export default function Promotions() {
                     <span className={`text-[10px] px-2 py-0.5 rounded-full ${p.active ? "bg-[#173321] text-[#6FCB86]" : "bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]"}`}>{p.active ? "Active" : "Paused"}</span>
                   </div>
                   <div className="text-xs text-[hsl(var(--muted-foreground))] mt-0.5">{p.description}</div>
-                  <div className="text-xs text-[hsl(var(--muted-foreground))] mt-0.5">{p.type === "percent" ? `${p.value}% off` : `$${p.value} off`} · {p.start} → {p.end}</div>
+                  <div className="text-xs text-[hsl(var(--muted-foreground))] mt-0.5">{p.type === "percent" ? `${p.value}% off` : `Rs ${p.value} off`} · {p.start} → {p.end}</div>
                 </div>
                 <div className="flex gap-1">
                   <button onClick={() => setEditing(p)} className="h-8 px-3 rounded-[8px] border border-[hsl(var(--border))] text-xs">Edit</button>
@@ -52,7 +61,7 @@ export default function Promotions() {
         </div>
 
         <div>
-          <div className="text-sm font-medium mb-3 flex items-center gap-2"><Star size={16} strokeWidth={1.5} className="text-[hsl(var(--accent))]" /> Loyalty members</div>
+          <div className="flex items-center justify-between mb-3"><div className="text-sm font-medium flex items-center gap-2"><Star size={16} strokeWidth={1.5} className="text-[hsl(var(--accent))]" /> Loyalty members</div><button onClick={() => setEditingMember({ id: "lm-" + Date.now(), name: "", visits: 0, points: 0, reward: "" })} className="h-8 px-3 rounded-[8px] border border-[hsl(var(--border))] text-xs flex items-center gap-1"><Plus size={13} strokeWidth={1.5} /> Add member</button></div>
           <div className="rounded-[12px] bg-[hsl(var(--card))] border border-[hsl(var(--border))] overflow-hidden">
             <table className="w-full text-sm">
               <thead>
@@ -61,15 +70,17 @@ export default function Promotions() {
                   <th className="px-4 py-3 font-medium">Visits</th>
                   <th className="px-4 py-3 font-medium">Points</th>
                   <th className="px-4 py-3 font-medium">Reward</th>
+                  <th className="px-4 py-3 font-medium text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {loyalty.map((m) => (
-                  <tr key={m.name} className="border-b border-[hsl(var(--border))] last:border-0">
+                  <tr key={m.id} className="border-b border-[hsl(var(--border))] last:border-0">
                     <td className="px-4 py-3 font-medium">{m.name}</td>
                     <td className="px-4 py-3">{m.visits}</td>
                     <td className="px-4 py-3 text-[hsl(var(--accent))] font-medium">{m.points}</td>
                     <td className="px-4 py-3 text-xs">{m.reward}</td>
+                    <td className="px-4 py-3 text-right"><button onClick={() => setEditingMember(m)} className="w-8 h-8 rounded-md border border-[hsl(var(--border))] inline-flex items-center justify-center text-[hsl(var(--muted-foreground))]" title="Edit"><Pencil size={14} strokeWidth={1.5} /></button></td>
                   </tr>
                 ))}
               </tbody>
@@ -83,6 +94,7 @@ export default function Promotions() {
       </div>
 
       {editing && <PromoEditor promo={editing} onClose={() => setEditing(null)} onSave={save} />}
+      {editingMember && <LoyaltyEditor member={editingMember} onClose={() => setEditingMember(null)} onSave={saveMember} />}
     </div>
   );
 }
@@ -98,7 +110,7 @@ function PromoEditor({ promo, onClose, onSave }) {
           <div><label className="text-[13px] text-[hsl(var(--muted-foreground))]">Code</label><input value={form.code} onChange={(e) => set("code", e.target.value.toUpperCase())} className="w-full h-10 mt-1 px-3 rounded-[8px] border border-[hsl(var(--border))] text-sm" /></div>
           <div><label className="text-[13px] text-[hsl(var(--muted-foreground))]">Description</label><input value={form.description} onChange={(e) => set("description", e.target.value)} className="w-full h-10 mt-1 px-3 rounded-[8px] border border-[hsl(var(--border))] text-sm" /></div>
           <div className="grid grid-cols-2 gap-3">
-            <div><label className="text-[13px] text-[hsl(var(--muted-foreground))]">Type</label><select value={form.type} onChange={(e) => set("type", e.target.value)} className="w-full h-10 mt-1 px-2 rounded-[8px] border border-[hsl(var(--border))] text-sm bg-transparent"><option value="percent">Percent</option><option value="fixed">Fixed $</option></select></div>
+            <div><label className="text-[13px] text-[hsl(var(--muted-foreground))]">Type</label><select value={form.type} onChange={(e) => set("type", e.target.value)} className="w-full h-10 mt-1 px-2 rounded-[8px] border border-[hsl(var(--border))] text-sm bg-transparent"><option value="percent">Percent</option><option value="fixed">Fixed Rs</option></select></div>
             <div><label className="text-[13px] text-[hsl(var(--muted-foreground))]">Value</label><input type="number" value={form.value} onChange={(e) => set("value", Number(e.target.value))} className="w-full h-10 mt-1 px-3 rounded-[8px] border border-[hsl(var(--border))] text-sm" /></div>
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -111,6 +123,24 @@ function PromoEditor({ promo, onClose, onSave }) {
           <button onClick={onClose} className="flex-1 h-10 rounded-[8px] border border-[hsl(var(--border))] text-sm">Cancel</button>
           <button onClick={() => onSave(form)} className="flex-1 h-10 rounded-[8px] bg-[hsl(var(--primary))] text-white text-sm">Save</button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function LoyaltyEditor({ member, onClose, onSave }) {
+  const [form, setForm] = useState(member);
+  const set = (key, value) => setForm((current) => ({ ...current, [key]: value }));
+  return (
+    <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center" onClick={onClose}>
+      <div className="bg-[hsl(var(--card))] w-full max-w-sm rounded-[12px] border border-[hsl(var(--border))] p-5" onClick={(event) => event.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4"><div className="text-sm font-medium">{member.name ? "Edit member" : "New member"}</div><button onClick={onClose}><X size={18} strokeWidth={1.5} /></button></div>
+        <div className="space-y-3">
+          <div><label className="text-[13px] text-[hsl(var(--muted-foreground))]">Name</label><input value={form.name} onChange={(event) => set("name", event.target.value)} className="w-full h-10 mt-1 px-3 rounded-[8px] border border-[hsl(var(--border))] text-sm" /></div>
+          <div className="grid grid-cols-2 gap-3"><div><label className="text-[13px] text-[hsl(var(--muted-foreground))]">Visits</label><input type="number" value={form.visits} onChange={(event) => set("visits", Number(event.target.value))} className="w-full h-10 mt-1 px-3 rounded-[8px] border border-[hsl(var(--border))] text-sm" /></div><div><label className="text-[13px] text-[hsl(var(--muted-foreground))]">Points</label><input type="number" value={form.points} onChange={(event) => set("points", Number(event.target.value))} className="w-full h-10 mt-1 px-3 rounded-[8px] border border-[hsl(var(--border))] text-sm" /></div></div>
+          <div><label className="text-[13px] text-[hsl(var(--muted-foreground))]">Reward</label><input value={form.reward} onChange={(event) => set("reward", event.target.value)} className="w-full h-10 mt-1 px-3 rounded-[8px] border border-[hsl(var(--border))] text-sm" /></div>
+        </div>
+        <div className="flex gap-2 mt-4"><button onClick={onClose} className="flex-1 h-10 rounded-[8px] border border-[hsl(var(--border))] text-sm">Cancel</button><button onClick={() => onSave(form)} className="flex-1 h-10 rounded-[8px] bg-[hsl(var(--primary))] text-white text-sm">Save</button></div>
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { LogIn, LogOut, Wallet, Users, Clock } from "lucide-react";
+import { LogOut, Wallet, Users, Clock, Plus, Pencil, Trash2, X } from "lucide-react";
 import { STAFF } from "@/lib/cafeData";
 
 export default function StaffShift() {
@@ -8,9 +8,19 @@ export default function StaffShift() {
     return saved ? JSON.parse(saved) : STAFF;
   });
   const [till, setTill] = useState(() => localStorage.getItem("pos_till") || "200.00");
+  const [editing, setEditing] = useState(null);
 
   const persist = (next) => { setStaff(next); localStorage.setItem("pos_staff", JSON.stringify(next)); };
   const toggleClock = (id) => persist(staff.map((s) => (s.id === id ? { ...s, clockedIn: !s.clockedIn } : s)));
+  const removeStaff = (id) => {
+    const member = staff.find((entry) => entry.id === id);
+    if (member && !confirm(`Delete ${member.name}?`)) return;
+    persist(staff.filter((entry) => entry.id !== id));
+  };
+  const saveStaff = (member) => {
+    persist(staff.some((entry) => entry.id === member.id) ? staff.map((entry) => (entry.id === member.id ? member : entry)) : [...staff, member]);
+    setEditing(null);
+  };
 
   const clocked = staff.filter((s) => s.clockedIn);
   const totalOrders = staff.reduce((sum, s) => sum + (s.ordersHandled || 0), 0);
@@ -24,7 +34,10 @@ export default function StaffShift() {
 
   return (
     <div className="px-8 py-7">
-      <h1 className="text-[28px] font-medium mb-5">Staff & shifts</h1>
+      <div className="flex items-center justify-between mb-5">
+        <h1 className="text-[28px] font-medium">Staff & shifts</h1>
+        <button onClick={() => setEditing({ id: "st-" + Date.now(), name: "", role: "Cashier", shift: "", clockedIn: false, ordersHandled: 0 })} className="h-10 px-4 rounded-[10px] bg-[hsl(var(--primary))] text-white text-sm font-medium flex items-center gap-1.5"><Plus size={16} strokeWidth={1.5} /> Add staff</button>
+      </div>
 
       <div className="grid grid-cols-3 gap-4 mb-5">
         <div className="rounded-[12px] bg-[hsl(var(--card))] border border-[hsl(var(--border))] p-5">
@@ -50,7 +63,7 @@ export default function StaffShift() {
               <th className="px-4 py-3 font-medium">Shift</th>
               <th className="px-4 py-3 font-medium">Orders</th>
               <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium text-right">Action</th>
+              <th className="px-4 py-3 font-medium text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -76,10 +89,12 @@ export default function StaffShift() {
                   <td className="px-4 py-3">
                     <span className={`text-[10px] px-2 py-1 rounded-full ${statusClass}`}>{s.clockedIn ? "On shift" : "Off"}</span>
                   </td>
-                  <td className="px-4 py-3 text-right">
-                    <button onClick={() => toggleClock(s.id)} className={`h-8 px-3 rounded-[8px] border text-xs ${btnClass}`}>
-                      {s.clockedIn ? "Clock out" : "Clock in"}
-                    </button>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-end gap-1">
+                      <button onClick={() => setEditing(s)} className="w-8 h-8 rounded-md border border-[hsl(var(--border))] flex items-center justify-center text-[hsl(var(--muted-foreground))]" title="Edit"><Pencil size={14} strokeWidth={1.5} /></button>
+                      <button onClick={() => removeStaff(s.id)} className="w-8 h-8 rounded-md border border-[hsl(var(--border))] flex items-center justify-center text-[hsl(var(--muted-foreground))]" title="Delete"><Trash2 size={14} strokeWidth={1.5} /></button>
+                      <button onClick={() => toggleClock(s.id)} className={`h-8 px-3 rounded-[8px] border text-xs ${btnClass}`}>{s.clockedIn ? "Clock out" : "Clock in"}</button>
+                    </div>
                   </td>
                 </tr>
               );
@@ -93,6 +108,25 @@ export default function StaffShift() {
         <button onClick={reconcile} className="h-10 px-4 rounded-[10px] bg-[hsl(var(--primary))] text-white text-sm font-medium flex items-center gap-2">
           <LogOut size={16} strokeWidth={1.5} /> Reconcile till
         </button>
+      </div>
+      {editing && <StaffEditor staffMember={editing} onClose={() => setEditing(null)} onSave={saveStaff} />}
+    </div>
+  );
+}
+
+function StaffEditor({ staffMember, onClose, onSave }) {
+  const [form, setForm] = useState(staffMember);
+  const set = (key, value) => setForm((current) => ({ ...current, [key]: value }));
+  return (
+    <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center" onClick={onClose}>
+      <div className="bg-[hsl(var(--card))] w-full max-w-sm rounded-[12px] border border-[hsl(var(--border))] p-5" onClick={(event) => event.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4"><div className="text-sm font-medium">{staffMember.name ? "Edit staff member" : "New staff member"}</div><button onClick={onClose}><X size={18} strokeWidth={1.5} /></button></div>
+        <div className="space-y-3">
+          <div><label className="text-[13px] text-[hsl(var(--muted-foreground))]">Name</label><input value={form.name} onChange={(event) => set("name", event.target.value)} className="w-full h-10 mt-1 px-3 rounded-[8px] border border-[hsl(var(--border))] text-sm" /></div>
+          <div><label className="text-[13px] text-[hsl(var(--muted-foreground))]">Role</label><select value={form.role} onChange={(event) => set("role", event.target.value)} className="w-full h-10 mt-1 px-2 rounded-[8px] border border-[hsl(var(--border))] text-sm bg-transparent text-[hsl(var(--foreground))]"><option style={{ backgroundColor: "#fff", color: "#2F241F" }}>Manager</option><option style={{ backgroundColor: "#fff", color: "#2F241F" }}>Cashier</option><option style={{ backgroundColor: "#fff", color: "#2F241F" }}>Kitchen</option></select></div>
+          <div><label className="text-[13px] text-[hsl(var(--muted-foreground))]">Shift</label><input value={form.shift} onChange={(event) => set("shift", event.target.value)} placeholder="e.g. Open 7:00 – 15:00" className="w-full h-10 mt-1 px-3 rounded-[8px] border border-[hsl(var(--border))] text-sm" /></div>
+        </div>
+        <div className="flex gap-2 mt-4"><button onClick={onClose} className="flex-1 h-10 rounded-[8px] border border-[hsl(var(--border))] text-sm">Cancel</button><button onClick={() => onSave(form)} className="flex-1 h-10 rounded-[8px] bg-[hsl(var(--primary))] text-white text-sm">Save</button></div>
       </div>
     </div>
   );

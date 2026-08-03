@@ -30,7 +30,7 @@ export default function MenuManagement() {
       <div className="flex items-center justify-between mb-5">
         <h1 className="text-[28px] font-medium">Menu & categories</h1>
         <div className="flex gap-2">
-          <button onClick={() => setManageCats(true)} className="h-10 px-4 rounded-[10px] border border-[hsl(var(--border))] text-sm font-medium flex items-center gap-1.5"><FolderPlus size={16} strokeWidth={1.5} /> Categories</button>
+           <button onClick={() => setManageCats(true)} className="h-10 px-4 rounded-[10px] border border-[hsl(var(--border))] text-sm font-medium flex items-center gap-1.5"><FolderPlus size={16} strokeWidth={1.5} /> Manage categories</button>
           <button onClick={() => setEditing({ id: "mi-" + Date.now(), name: "", description: "", price: 0, category: categories[0]?.id || "coffee", image: "", available: true, drink: true })} className="h-10 px-4 rounded-[10px] bg-[hsl(var(--primary))] text-white text-sm font-medium flex items-center gap-1.5"><Plus size={16} strokeWidth={1.5} /> Add item</button>
         </div>
       </div>
@@ -73,7 +73,7 @@ export default function MenuManagement() {
                 <td className="px-4 py-3 capitalize">{categories.find((c) => c.id === i.category)?.name || i.category}</td>
                 <td className="px-4 py-3 text-[hsl(var(--accent))] font-medium">{formatPrice(i.price)}</td>
                 <td className="px-4 py-3">
-                  <span className={`text-[10px] px-2 py-1 rounded-full ${i.available ? "bg-[#173321] text-[#6FCB86]" : "bg-[#3A1F1F] text-[#E38585]"}`}>{i.available ? "Available" : "unavailaible"}</span>
+                  <span className={`text-[10px] px-2 py-1 rounded-full ${i.available ? "bg-[#173321] text-[#6FCB86]" : "bg-[#3A1F1F] text-[#E38585]"}`}>{i.available ? "Available" : "Unavailaible"}</span>
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-end gap-1">
@@ -97,6 +97,7 @@ export default function MenuManagement() {
 function CategoryManager({ categories, items, onClose, onSave }) {
   const [list, setList] = useState(categories);
   const [newName, setNewName] = useState("");
+  const [editingId, setEditingId] = useState(null);
 
   const addCategory = () => {
     const name = newName.trim();
@@ -116,9 +117,9 @@ function CategoryManager({ categories, items, onClose, onSave }) {
   return (
     <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center" onClick={onClose}>
       <div className="bg-[hsl(var(--card))] w-full max-w-md rounded-[12px] border border-[hsl(var(--border))] p-5" onClick={(event) => event.stopPropagation()}>
-        <div className="flex items-center justify-between mb-4"><div className="text-sm font-medium">Manage categories</div><button onClick={onClose}><X size={18} strokeWidth={1.5} /></button></div>
+        <div className="flex items-center justify-between mb-4"><div className="text-sm font-medium">Edit or delete categories</div><button onClick={onClose}><X size={18} strokeWidth={1.5} /></button></div>
         <div className="space-y-2 max-h-64 overflow-y-auto no-scrollbar mb-3">
-          {list.map((category) => <div key={category.id} className="flex items-center gap-2"><input value={category.name} onChange={(event) => setList(list.map((entry) => entry.id === category.id ? { ...entry, name: event.target.value } : entry))} className="flex-1 h-9 px-3 rounded-[8px] border border-[hsl(var(--border))] text-sm" /><button onClick={() => removeCategory(category.id)} className="w-9 h-9 rounded-[8px] border border-[hsl(var(--border))] flex items-center justify-center text-[hsl(var(--muted-foreground))]"><Trash2 size={15} strokeWidth={1.5} /></button></div>)}
+          {list.map((category) => <div key={category.id} className="flex items-center gap-2"><div className="flex-1 h-9 px-3 rounded-[8px] border border-[hsl(var(--border))] text-sm flex items-center">{editingId === category.id ? <input autoFocus value={category.name} onChange={(event) => setList(list.map((entry) => entry.id === category.id ? { ...entry, name: event.target.value } : entry))} onBlur={() => setEditingId(null)} onKeyDown={(event) => event.key === "Enter" && setEditingId(null)} className="w-full bg-transparent outline-none text-[hsl(var(--foreground))]" /> : category.name}</div><button onClick={() => setEditingId(category.id)} className="w-9 h-9 rounded-[8px] border border-[hsl(var(--border))] flex items-center justify-center text-[hsl(var(--muted-foreground))]" title="Edit category"><Pencil size={15} strokeWidth={1.5} /></button><button onClick={() => removeCategory(category.id)} className="w-9 h-9 rounded-[8px] border border-[hsl(var(--border))] flex items-center justify-center text-[hsl(var(--muted-foreground))]" title="Delete category"><Trash2 size={15} strokeWidth={1.5} /></button></div>)}
         </div>
         <div className="flex items-center gap-2 mb-4"><input value={newName} onChange={(event) => setNewName(event.target.value)} placeholder="New category name" className="flex-1 h-9 px-3 rounded-[8px] border border-[hsl(var(--border))] text-sm" /><button onClick={addCategory} className="h-9 px-3 rounded-[8px] bg-[hsl(var(--primary))] text-white text-sm flex items-center gap-1"><Plus size={15} strokeWidth={1.5} /> Add</button></div>
         <div className="flex gap-2"><button onClick={onClose} className="flex-1 h-10 rounded-[8px] border border-[hsl(var(--border))] text-sm">Cancel</button><button onClick={() => { onSave(list); onClose(); }} className="flex-1 h-10 rounded-[8px] bg-[hsl(var(--primary))] text-white text-sm">Save categories</button></div>
@@ -148,7 +149,7 @@ function ItemEditor({ item, categories, onClose, onSave }) {
           <Field label="Photo"><div className="flex items-center gap-3"><div className="w-16 h-16 rounded-[10px] bg-[hsl(var(--muted))] overflow-hidden flex items-center justify-center shrink-0">{form.image ? <img src={form.image} alt="" className="w-full h-full object-cover" /> : <ImageIcon size={20} strokeWidth={1.5} className="text-[hsl(var(--muted-foreground))]" />}</div><label className="h-9 px-3 rounded-[8px] border border-[hsl(var(--border))] text-xs cursor-pointer flex items-center gap-1.5"><ImageIcon size={14} strokeWidth={1.5} /> Choose photo<input type="file" accept="image/*" onChange={handleImage} className="hidden" /></label></div></Field>
           <Field label="Name"><input value={form.name} onChange={(e) => set("name", e.target.value)} className="input" /></Field>
           <Field label="Description"><input value={form.description} onChange={(e) => set("description", e.target.value)} className="input" /></Field>
-          <Field label="Price ($)"><input type="number" step="0.01" value={form.price} onChange={(e) => set("price", Number(e.target.value))} className="input" /></Field>
+          <Field label="Price (Rs)"><input type="number" step="0.01" value={form.price} onChange={(e) => set("price", Number(e.target.value))} className="input" /></Field>
           <Field label="Category"><select value={form.category} onChange={(e) => set("category", e.target.value)} className="input category-select">{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></Field>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.drink} onChange={(e) => set("drink", e.target.checked)} /> Has drink modifiers</label>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.available} onChange={(e) => set("available", e.target.checked)} /> Available</label>

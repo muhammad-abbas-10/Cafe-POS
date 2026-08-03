@@ -1,6 +1,6 @@
 export const TAX_RATE = 0.08;
 
-export const formatPrice = (n) => `$${(Number(n) || 0).toFixed(2)}`;
+export const formatPrice = (n) => `Rs ${(Number(n) || 0).toFixed(2)}`;
 
 export const CATEGORIES = [
   { id: "coffee", name: "Coffee", icon: "☕" },
@@ -70,7 +70,7 @@ export const INGREDIENTS = [
 
 export const PROMOTIONS = [
   { id: "pr-1", code: "MORNING10", description: "10% off before 11am", type: "percent", value: 10, active: true, start: "2026-07-01", end: "2026-12-31" },
-  { id: "pr-2", code: "COMBO5", description: "$5 off orders over $30", type: "fixed", value: 5, active: true, start: "2026-07-15", end: "2026-08-15" },
+  { id: "pr-2", code: "COMBO5", description: "Rs 5 off orders over Rs 30", type: "fixed", value: 5, active: true, start: "2026-07-15", end: "2026-08-15" },
   { id: "pr-3", code: "SUMMER", description: "15% off all cold drinks", type: "percent", value: 15, active: false, start: "2026-06-01", end: "2026-08-31" },
 ];
 

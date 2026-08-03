@@ -1,4 +1,5 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import { formatPrice } from "@/lib/cafeData";
 
 const ORDER_TYPE_LABEL = { "dine-in": "Dine-in", takeaway: "Takeaway", delivery: "Delivery" };
@@ -11,7 +12,7 @@ export default function Receipt({ order }) {
   const bizPhone = localStorage.getItem("pos_biz_phone") || "123-456-7890";
   const now = new Date();
 
-  return (
+  return createPortal(
     <div className="receipt-print hidden">
       <div className="receipt-torn-top" />
       <div className="receipt-paper mx-auto bg-white text-black font-mono px-5 pt-2 pb-4">
@@ -35,6 +36,7 @@ export default function Receipt({ order }) {
         <div className="text-center text-[9px] tracking-[0.3em] mt-1">{order.order_number}</div>
       </div>
       <div className="receipt-torn-bottom" />
-    </div>
+    </div>,
+    document.body
   );
 }

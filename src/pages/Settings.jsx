@@ -44,7 +44,7 @@ export default function Settings() {
 
       <Section icon={Percent} title="Delivery fee">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-[hsl(var(--muted-foreground))]">$</span>
+          <span className="text-sm text-[hsl(var(--muted-foreground))]">Rs</span>
           <input type="number" step="0.5" value={deliveryFee} onChange={(e) => setDeliveryFee(e.target.value)} className="w-24 h-10 px-3 rounded-[8px] border border-[hsl(var(--border))] text-sm" />
           <span className="text-sm text-[hsl(var(--muted-foreground))]">flat fee added to delivery orders</span>
         </div>
