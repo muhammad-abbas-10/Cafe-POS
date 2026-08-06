@@ -44,4 +44,15 @@ async function remove(id) {
   return result.rows[0];
 }
 
-module.exports = { findAll, findById, create, update, remove };
+async function adjustStock(id, delta, client = pool) {
+  const result = await client.query(
+    `UPDATE ingredients
+     SET stock_qty = stock_qty + $1, updated_at = now()
+     WHERE id = $2
+     RETURNING *`,
+    [delta, id]
+  );
+  return result.rows[0];
+}
+
+module.exports = { findAll, findById, create, update, remove, adjustStock };
