@@ -38,7 +38,15 @@ async function updateCategory(id, { name, sort_order }) {
 
 async function deleteCategory(id) {
   await getCategoryById(id); // throws 404 if it doesn't exist
-  return categoriesRepository.remove(id);
+
+  try {
+    return await categoriesRepository.remove(id);
+  } catch (err) {
+    if (err.code === "23503") {
+      throw new ApiError(409, "This category still has menu items assigned to it. Reassign or delete those items first.");
+    }
+    throw err;
+  }
 }
 
 module.exports = {
