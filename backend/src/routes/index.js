@@ -8,6 +8,7 @@ const staffRoutes = require("./staff.routes");
 const shiftsRoutes = require("./shifts.routes");
 const inventoryAdjustmentsRoutes = require("./inventoryAdjustments.routes");
 const settingsRoutes = require("./settings.routes");
+const ordersRoutes = require("./orders.routes");
 
 
 const router = express.Router();
@@ -18,7 +19,7 @@ router.use("/ingredients", ingredientsRoutes);
 router.use("/addons", addonsRoutes);
 router.use("/staff", staffRoutes);
 router.use("/shifts", shiftsRoutes);
-//router.use("/orders", ordersRoutes);
+router.use("/orders", ordersRoutes);
 router.use("/inventory-adjustments", inventoryAdjustmentsRoutes);
 router.use("/settings", settingsRoutes);
 
