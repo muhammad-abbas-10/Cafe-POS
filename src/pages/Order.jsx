@@ -1,25 +1,44 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Plus, Minus, Trash2, StickyNote, ArrowRight, Coffee, CupSoda, GlassWater, Utensils, Cookie, Cake, ShoppingBag } from "lucide-react";
+import { Search, Plus, Minus, Trash2, StickyNote, ArrowRight, ShoppingBag } from "lucide-react";
 import { formatPrice } from "@/lib/cafeData";
-import { loadCategories, loadItems } from "@/lib/catalogStore";
+import { fetchCategories, fetchItems } from "@/lib/catalogStore";
 import { useCart } from "@/lib/CartContext";
 import ItemModifierSheet from "@/components/ItemModifierSheet";
-
-const CATEGORY_ICON = {
-  coffee: Coffee, juice: CupSoda, milk: Coffee, rice: Utensils, snack: Cookie, dessert: Cake,
-};
 
 export default function Order() {
   const navigate = useNavigate();
   const { items, addItem, totals, orderType, setOrderType, table, setTable, removeLine, updateLine, setLineNote, billDiscount } = useCart();
-  const [categories] = useState(loadCategories);
-  const [menuItems] = useState(loadItems);
-  const [activeCat, setActiveCat] = useState(() => loadCategories()[0]?.id || "coffee");
+  const [categories, setCategories] = useState([]);
+  const [menuItems, setMenuItems] = useState([]);
+  const [activeCat, setActiveCat] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [query, setQuery] = useState("");
   const [modifierItem, setModifierItem] = useState(null);
   const [noteFor, setNoteFor] = useState(null);
   const [mobileCartOpen, setMobileCartOpen] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      try {
+        const [cats, menu] = await Promise.all([fetchCategories(), fetchItems()]);
+        if (cancelled) return;
+        setCategories(cats);
+        setMenuItems(menu);
+        setActiveCat(cats[0]?.id ?? null);
+      } catch (err) {
+        if (!cancelled) setLoadError(err.message);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    load();
+    return () => { cancelled = true; };
+  }, []);
 
   const filtered = useMemo(() => {
     let list = menuItems.filter((m) => m.available);
@@ -31,6 +50,22 @@ export default function Order() {
     }
     return list;
   }, [activeCat, menuItems, query]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen text-sm text-[hsl(var(--muted-foreground))]">
+        Loading menu…
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex items-center justify-center h-screen text-sm text-red-400">
+        Couldn't load the menu: {loadError}
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col md:flex-row md:h-screen">
@@ -53,7 +88,6 @@ export default function Order() {
         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-3 mb-4">
           {categories.map((c) => {
             const active = !query && activeCat === c.id;
-            const Icon = CATEGORY_ICON[c.id] || Coffee;
             return (
               <button
                 key={c.id}
@@ -64,7 +98,7 @@ export default function Order() {
                     : "border-[#3A322C] bg-[hsl(var(--card))] text-[#F3EAE3] hover:bg-[hsl(var(--secondary))]"
                 }`}
               >
-                <Icon size={20} strokeWidth={1.5} className="text-[#F3EAE3]" />
+                <span className="text-lg leading-none">{c.icon}</span>
                 <span className="text-sm font-medium">{c.name}</span>
               </button>
             );
@@ -167,7 +201,7 @@ export default function Order() {
                   {line.addons.length > 0 && (
                     <div className="text-[11px] text-[hsl(var(--muted-foreground))]">+ {line.addons.map((a) => a.name).join(", ")}</div>
                   )}
-                  {line.note && <div className="text-[11px] text-[hsl(var(--accent))] mt-1 italic">“{line.note}”</div>}
+                  {line.note && <div className="text-[11px] text-[hsl(var(--accent))] mt-1 italic">"{line.note}"</div>}
                 </div>
                 <div className="text-sm font-medium text-[hsl(var(--foreground))]">{formatPrice(line.lineTotal)}</div>
               </div>

@@ -1,57 +1,148 @@
-import React, { useState } from "react";
-import { Plus, Pencil, Power, Trash2, X, LayoutGrid, Coffee, CupSoda, Utensils, Cookie, Cake, FolderPlus, Image as ImageIcon } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Plus, Pencil, Power, Trash2, X, FolderPlus, Image as ImageIcon } from "lucide-react";
 import { formatPrice } from "@/lib/cafeData";
-import { loadCategories, saveCategories, loadItems, saveItems } from "@/lib/catalogStore";
-const CATEGORY_ICON = {
-  all: LayoutGrid, coffee: Coffee, juice: CupSoda, milk: Coffee, rice: Utensils, snack: Cookie, dessert: Cake,
-};
+import {
+  fetchCategories,
+  createCategory,
+  updateCategory,
+  deleteCategory,
+  fetchItems,
+  createItem,
+  updateItem,
+  deleteItem,
+} from "@/lib/catalogStore";
+
 export default function MenuManagement() {
-  const [categories, setCategories] = useState(loadCategories);
-  const [items, setItems] = useState(loadItems);
+  const [categories, setCategories] = useState([]);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [editing, setEditing] = useState(null);
   const [catFilter, setCatFilter] = useState("all");
   const [manageCats, setManageCats] = useState(false);
 
-  const persist = (next) => { setItems(next); saveItems(next); };
-  const persistCategories = (next) => { setCategories(next); saveCategories(next); };
+  useEffect(() => {
+    let cancelled = false;
 
-  const toggleAvailable = (id) => persist(items.map((i) => (i.id === id ? { ...i, available: !i.available } : i)));
-  const remove = (id) => persist(items.filter((i) => i.id !== id));
-  const save = (item) => {
-    if (items.find((i) => i.id === item.id)) persist(items.map((i) => (i.id === item.id ? item : i)));
-    else persist([...items, item]);
-    setEditing(null);
+    async function load() {
+      try {
+        const [cats, menu] = await Promise.all([fetchCategories(), fetchItems()]);
+        if (cancelled) return;
+        setCategories(cats);
+        setItems(menu);
+      } catch (err) {
+        if (!cancelled) setLoadError(err.message);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
+  const toggleAvailable = async (id) => {
+    const item = items.find((i) => i.id === id);
+    if (!item) return;
+    try {
+      const updated = await updateItem(id, { ...item, available: !item.available });
+      setItems(items.map((i) => (i.id === id ? updated : i)));
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const remove = async (id) => {
+    if (!confirm("Delete this item?")) return;
+    try {
+      await deleteItem(id);
+      setItems(items.filter((i) => i.id !== id));
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const save = async (item) => {
+    try {
+      if (item.id) {
+        const updated = await updateItem(item.id, item);
+        setItems(items.map((i) => (i.id === updated.id ? updated : i)));
+      } else {
+        const created = await createItem(item);
+        setItems([...items, created]);
+      }
+      setEditing(null);
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleCreateCategory = async (name) => {
+    const created = await createCategory({ name, sort_order: categories.length });
+    setCategories([...categories, created]);
+  };
+
+  const handleRenameCategory = async (id, name) => {
+    const existing = categories.find((c) => c.id === id);
+    const updated = await updateCategory(id, { name, sort_order: existing?.sort_order ?? 0 });
+    setCategories(categories.map((c) => (c.id === id ? updated : c)));
+  };
+
+  const handleDeleteCategory = async (id) => {
+    await deleteCategory(id);
+    setCategories(categories.filter((c) => c.id !== id));
   };
 
   const visible = items.filter((i) => catFilter === "all" || i.category === catFilter);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64 text-sm text-[hsl(var(--muted-foreground))]">
+        Loading menu…
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex items-center justify-center h-64 text-sm text-red-400">
+        Couldn't load the menu: {loadError}
+      </div>
+    );
+  }
 
   return (
     <div className="px-8 py-7">
       <div className="flex items-center justify-between mb-5">
         <h1 className="text-[28px] font-medium">Menu & categories</h1>
         <div className="flex gap-2">
-           <button onClick={() => setManageCats(true)} className="h-10 px-4 rounded-[10px] border border-[hsl(var(--border))] text-sm font-medium flex items-center gap-1.5"><FolderPlus size={16} strokeWidth={1.5} /> Manage categories</button>
-          <button onClick={() => setEditing({ id: "mi-" + Date.now(), name: "", description: "", price: 0, category: categories[0]?.id || "coffee", image: "", available: true, drink: true })} className="h-10 px-4 rounded-[10px] bg-[hsl(var(--primary))] text-white text-sm font-medium flex items-center gap-1.5"><Plus size={16} strokeWidth={1.5} /> Add item</button>
+          <button onClick={() => setManageCats(true)} className="h-10 px-4 rounded-[10px] border border-[hsl(var(--border))] text-sm font-medium flex items-center gap-1.5"><FolderPlus size={16} strokeWidth={1.5} /> Manage categories</button>
+          <button
+            onClick={() => setEditing({ id: null, name: "", description: "", price: 0, category: categories[0]?.id ?? "", image: "", available: true, drink: true })}
+            disabled={categories.length === 0}
+            className="h-10 px-4 rounded-[10px] bg-[hsl(var(--primary))] text-white text-sm font-medium flex items-center gap-1.5 disabled:opacity-40"
+          >
+            <Plus size={16} strokeWidth={1.5} /> Add item
+          </button>
         </div>
       </div>
 
-<div className="flex gap-2 mb-4 overflow-x-auto no-scrollbar">
-  {[{ id: "all", name: "All" }, ...categories].map((c) => {
-    const Icon = CATEGORY_ICON[c.id] || Coffee;
-    const active = catFilter === c.id;
-    return (
-      <button
-        key={c.id}
-        onClick={() => setCatFilter(c.id)}
-        className={`shrink-0 h-9 px-3 rounded-[10px] border-2 text-sm flex items-center gap-1.5 transition-colors ${
-          active ? "border-[hsl(var(--accent))] bg-[hsl(var(--secondary))] text-[hsl(var(--accent))]" : "border-[hsl(var(--border))] text-[hsl(var(--muted-foreground))]"
-        }`}
-      >
-        <Icon size={15} strokeWidth={1.5} /> {c.name}
-      </button>
-    );
-  })}
-</div>
+      <div className="flex gap-2 mb-4 overflow-x-auto no-scrollbar">
+        {[{ id: "all", name: "All", icon: "🗂️" }, ...categories].map((c) => {
+          const active = catFilter === c.id;
+          return (
+            <button
+              key={c.id}
+              onClick={() => setCatFilter(c.id)}
+              className={`shrink-0 h-9 px-3 rounded-[10px] border-2 text-sm flex items-center gap-1.5 transition-colors ${
+                active ? "border-[hsl(var(--accent))] bg-[hsl(var(--secondary))] text-[hsl(var(--accent))]" : "border-[hsl(var(--border))] text-[hsl(var(--muted-foreground))]"
+              }`}
+            >
+              <span className="text-sm leading-none">{c.icon}</span> {c.name}
+            </button>
+          );
+        })}
+      </div>
 
       <div className="rounded-[12px] bg-[hsl(var(--card))] border border-[hsl(var(--border))] overflow-hidden">
         <table className="w-full text-sm">
@@ -68,7 +159,7 @@ export default function MenuManagement() {
             {visible.map((i) => (
               <tr key={i.id} className="border-b border-[hsl(var(--border))] last:border-0">
                 <td className="px-4 py-3">
-                 <div className="flex items-center gap-2"><img src={i.image} alt={i.name} className="w-9 h-9 rounded-[8px] object-cover bg-[hsl(var(--muted))]" /><div><div className="font-medium">{i.name}</div><div className="text-xs text-[hsl(var(--muted-foreground))]">{i.description}</div></div></div>
+                  <div className="flex items-center gap-2"><img src={i.image} alt={i.name} className="w-9 h-9 rounded-[8px] object-cover bg-[hsl(var(--muted))]" /><div><div className="font-medium">{i.name}</div><div className="text-xs text-[hsl(var(--muted-foreground))]">{i.description}</div></div></div>
                 </td>
                 <td className="px-4 py-3 capitalize">{categories.find((c) => c.id === i.category)?.name || i.category}</td>
                 <td className="px-4 py-3 text-[hsl(var(--accent))] font-medium">{formatPrice(i.price)}</td>
@@ -88,41 +179,108 @@ export default function MenuManagement() {
         </table>
       </div>
 
-       {editing && <ItemEditor item={editing} categories={categories} onClose={() => setEditing(null)} onSave={save} />}
-       {manageCats && <CategoryManager categories={categories} items={items} onClose={() => setManageCats(false)} onSave={persistCategories} />}
+      {editing && <ItemEditor item={editing} categories={categories} onClose={() => setEditing(null)} onSave={save} />}
+      {manageCats && (
+        <CategoryManager
+          categories={categories}
+          items={items}
+          onClose={() => setManageCats(false)}
+          onCreate={handleCreateCategory}
+          onRename={handleRenameCategory}
+          onDelete={handleDeleteCategory}
+        />
+      )}
     </div>
   );
 }
 
-function CategoryManager({ categories, items, onClose, onSave }) {
-  const [list, setList] = useState(categories);
+function CategoryManager({ categories, items, onClose, onCreate, onRename, onDelete }) {
   const [newName, setNewName] = useState("");
   const [editingId, setEditingId] = useState(null);
+  const [editingName, setEditingName] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
 
-  const addCategory = () => {
-    const name = newName.trim();
-    if (!name) return;
-    const id = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-    if (!id || list.some((category) => category.id === id)) return;
-    setList([...list, { id, name }]);
-    setNewName("");
+  const startEditing = (category) => {
+    setEditingId(category.id);
+    setEditingName(category.name);
   };
 
-  const removeCategory = (id) => {
+  const commitRename = async () => {
+    const id = editingId;
+    const name = editingName.trim();
+    setEditingId(null);
+    if (!id || !name) return;
+    try {
+      setBusy(true);
+      setError(null);
+      await onRename(id, name);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const addCategory = async () => {
+    const name = newName.trim();
+    if (!name) return;
+    try {
+      setBusy(true);
+      setError(null);
+      await onCreate(name);
+      setNewName("");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const removeCategory = async (id) => {
     const inUse = items.filter((item) => item.category === id).length;
     if (inUse > 0 && !confirm(`${inUse} item(s) use this category. Delete anyway?`)) return;
-    setList(list.filter((category) => category.id !== id));
+    try {
+      setBusy(true);
+      setError(null);
+      await onDelete(id);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
     <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center" onClick={onClose}>
       <div className="bg-[hsl(var(--card))] w-full max-w-md rounded-[12px] border border-[hsl(var(--border))] p-5" onClick={(event) => event.stopPropagation()}>
         <div className="flex items-center justify-between mb-4"><div className="text-sm font-medium">Edit or delete categories</div><button onClick={onClose}><X size={18} strokeWidth={1.5} /></button></div>
+        {error && <div className="text-xs text-red-400 mb-2">{error}</div>}
         <div className="space-y-2 max-h-64 overflow-y-auto no-scrollbar mb-3">
-          {list.map((category) => <div key={category.id} className="flex items-center gap-2"><div className="flex-1 h-9 px-3 rounded-[8px] border border-[hsl(var(--border))] text-sm flex items-center">{editingId === category.id ? <input autoFocus value={category.name} onChange={(event) => setList(list.map((entry) => entry.id === category.id ? { ...entry, name: event.target.value } : entry))} onBlur={() => setEditingId(null)} onKeyDown={(event) => event.key === "Enter" && setEditingId(null)} className="w-full bg-transparent outline-none text-[hsl(var(--foreground))]" /> : category.name}</div><button onClick={() => setEditingId(category.id)} className="w-9 h-9 rounded-[8px] border border-[hsl(var(--border))] flex items-center justify-center text-[hsl(var(--muted-foreground))]" title="Edit category"><Pencil size={15} strokeWidth={1.5} /></button><button onClick={() => removeCategory(category.id)} className="w-9 h-9 rounded-[8px] border border-[hsl(var(--border))] flex items-center justify-center text-[hsl(var(--muted-foreground))]" title="Delete category"><Trash2 size={15} strokeWidth={1.5} /></button></div>)}
+          {categories.map((category) => (
+            <div key={category.id} className="flex items-center gap-2">
+              <div className="flex-1 h-9 px-3 rounded-[8px] border border-[hsl(var(--border))] text-sm flex items-center">
+                {editingId === category.id ? (
+                  <input
+                    autoFocus
+                    value={editingName}
+                    onChange={(event) => setEditingName(event.target.value)}
+                    onBlur={commitRename}
+                    onKeyDown={(event) => event.key === "Enter" && commitRename()}
+                    className="w-full bg-transparent outline-none text-[hsl(var(--foreground))]"
+                  />
+                ) : category.name}
+              </div>
+              <button onClick={() => startEditing(category)} disabled={busy} className="w-9 h-9 rounded-[8px] border border-[hsl(var(--border))] flex items-center justify-center text-[hsl(var(--muted-foreground))] disabled:opacity-40" title="Edit category"><Pencil size={15} strokeWidth={1.5} /></button>
+              <button onClick={() => removeCategory(category.id)} disabled={busy} className="w-9 h-9 rounded-[8px] border border-[hsl(var(--border))] flex items-center justify-center text-[hsl(var(--muted-foreground))] disabled:opacity-40" title="Delete category"><Trash2 size={15} strokeWidth={1.5} /></button>
+            </div>
+          ))}
         </div>
-        <div className="flex items-center gap-2 mb-4"><input value={newName} onChange={(event) => setNewName(event.target.value)} placeholder="New category name" className="flex-1 h-9 px-3 rounded-[8px] border border-[hsl(var(--border))] text-sm" /><button onClick={addCategory} className="h-9 px-3 rounded-[8px] bg-[hsl(var(--primary))] text-white text-sm flex items-center gap-1"><Plus size={15} strokeWidth={1.5} /> Add</button></div>
-        <div className="flex gap-2"><button onClick={onClose} className="flex-1 h-10 rounded-[8px] border border-[hsl(var(--border))] text-sm">Cancel</button><button onClick={() => { onSave(list); onClose(); }} className="flex-1 h-10 rounded-[8px] bg-[hsl(var(--primary))] text-white text-sm">Save categories</button></div>
+        <div className="flex items-center gap-2 mb-4">
+          <input value={newName} onChange={(event) => setNewName(event.target.value)} placeholder="New category name" className="flex-1 h-9 px-3 rounded-[8px] border border-[hsl(var(--border))] text-sm" />
+          <button onClick={addCategory} disabled={busy} className="h-9 px-3 rounded-[8px] bg-[hsl(var(--primary))] text-white text-sm flex items-center gap-1 disabled:opacity-40"><Plus size={15} strokeWidth={1.5} /> Add</button>
+        </div>
+        <button onClick={onClose} className="w-full h-10 rounded-[8px] border border-[hsl(var(--border))] text-sm">Done</button>
       </div>
     </div>
   );
@@ -142,7 +300,7 @@ function ItemEditor({ item, categories, onClose, onSave }) {
     <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center" onClick={onClose}>
       <div className="bg-[hsl(var(--card))] w-full max-w-md rounded-[12px] border border-[hsl(var(--border))] p-5" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
-          <div className="text-sm font-medium">{item.name ? "Edit item" : "New item"}</div>
+          <div className="text-sm font-medium">{item.id ? "Edit item" : "New item"}</div>
           <button onClick={onClose}><X size={18} strokeWidth={1.5} /></button>
         </div>
         <div className="space-y-3">
