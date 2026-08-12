@@ -9,7 +9,7 @@ const shiftsRoutes = require("./shifts.routes");
 const inventoryAdjustmentsRoutes = require("./inventoryAdjustments.routes");
 const settingsRoutes = require("./settings.routes");
 const ordersRoutes = require("./orders.routes");
-
+const authRoutes = require("./auth.routes");
 
 const router = express.Router();
 
@@ -22,5 +22,6 @@ router.use("/shifts", shiftsRoutes);
 router.use("/orders", ordersRoutes);
 router.use("/inventory-adjustments", inventoryAdjustmentsRoutes);
 router.use("/settings", settingsRoutes);
+router.use("/auth", authRoutes);
 
 module.exports = router;

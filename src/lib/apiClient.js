@@ -1,18 +1,40 @@
 const BASE_URL = import.meta.env.VITE_API_URL;
 
+function getToken() {
+  return localStorage.getItem("pos_auth_token");
+}
+
+export function setToken(token) {
+  localStorage.setItem("pos_auth_token", token);
+}
+
+export function clearToken() {
+  localStorage.removeItem("pos_auth_token");
+}
+
 async function request(path, options = {}) {
+  const token = getToken();
+
   const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     ...options,
   });
 
+  if (res.status === 401) {
+    clearToken();
+    window.location.href = "/login";
+    throw new Error("Session expired, please log in again");
+  }
+
   if (res.status === 204) return null;
 
-  const contentType = res.headers.get("content-type") || "";
-  const data = contentType.includes("application/json") ? await res.json() : null;
+  const data = await res.json();
 
   if (!res.ok) {
-    throw new Error(data?.error?.message || `Request failed (${res.status})`);
+    throw new Error(data?.error?.message || "Something went wrong");
   }
 
   return data;
