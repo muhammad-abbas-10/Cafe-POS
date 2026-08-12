@@ -1,5 +1,7 @@
 const menuItemsRepository = require("../repositories/menuItems.repository");
 const categoriesRepository = require("../repositories/categories.repository");
+const ingredientsRepository = require("../repositories/ingredients.repository");
+const itemIngredientsRepository = require("../repositories/itemIngredients.repository");
 const ApiError = require("../utils/ApiError");
 
 async function getAllMenuItems() {
@@ -65,10 +67,39 @@ async function deleteMenuItem(id) {
   return menuItemsRepository.remove(id);
 }
 
+async function getRecipe(id) {
+  await getMenuItemById(id);
+  return itemIngredientsRepository.findByMenuItemId(id);
+}
+
+async function updateRecipe(id, recipe) {
+  await getMenuItemById(id);
+  if (!Array.isArray(recipe)) throw new ApiError(400, "recipe must be an array");
+
+  const seen = new Set();
+  for (const row of recipe) {
+    const quantity = Number(row.quantity);
+    if (!row.ingredient_id || !Number.isFinite(quantity) || quantity <= 0) {
+      throw new ApiError(400, "Each recipe row requires an ingredient_id and positive quantity");
+    }
+    if (seen.has(row.ingredient_id)) throw new ApiError(400, "Recipe ingredients must be unique");
+    seen.add(row.ingredient_id);
+    if (!await ingredientsRepository.findById(row.ingredient_id)) {
+      throw new ApiError(400, `ingredient_id ${row.ingredient_id} does not exist`);
+    }
+  }
+  return itemIngredientsRepository.replaceForMenuItem(
+    id,
+    recipe.map((row) => ({ ingredient_id: row.ingredient_id, quantity: Number(row.quantity) }))
+  );
+}
+
 module.exports = {
   getAllMenuItems,
   getMenuItemById,
   createMenuItem,
   updateMenuItem,
   deleteMenuItem,
+  getRecipe,
+  updateRecipe,
 };

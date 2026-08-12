@@ -25,4 +25,12 @@ async function remove(req, res) {
   res.status(204).send();
 }
 
-module.exports = { getAll, getById, create, update, remove };
+async function getRecipe(req, res) {
+  res.json(await menuItemsService.getRecipe(req.params.id));
+}
+
+async function updateRecipe(req, res) {
+  res.json(await menuItemsService.updateRecipe(req.params.id, req.body.recipe));
+}
+
+module.exports = { getAll, getById, create, update, remove, getRecipe, updateRecipe };

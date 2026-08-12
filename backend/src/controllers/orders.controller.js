@@ -10,6 +10,10 @@ async function getById(req, res) {
   res.json(order);
 }
 
+async function getReportSummary(req, res) {
+  res.json(await ordersService.getReportSummary());
+}
+
 async function create(req, res) {
   const order = await ordersService.createOrder(req.body);
   res.status(201).json(order);
@@ -20,4 +24,4 @@ async function updateStatus(req, res) {
   res.json(order);
 }
 
-module.exports = { getAll, getById, create, updateStatus };
+module.exports = { getAll, getById, create, updateStatus, getReportSummary };

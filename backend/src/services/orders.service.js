@@ -4,11 +4,15 @@ const menuItemsRepository = require("../repositories/menuItems.repository");
 const addonsRepository = require("../repositories/addons.repository");
 const staffRepository = require("../repositories/staff.repository");
 const settingsRepository = require("../repositories/settings.repository");
+const ingredientsRepository = require("../repositories/ingredients.repository");
+const inventoryAdjustmentsRepository = require("../repositories/inventoryAdjustments.repository");
+const itemIngredientsRepository = require("../repositories/itemIngredients.repository");
 const ApiError = require("../utils/ApiError");
 
 const ORDER_TYPES = ["dine-in", "takeaway", "delivery"];
 const PAYMENT_METHODS = ["cash", "card", "e-wallet", "split"];
 const STATUSES = ["completed", "voided", "refunded"];
+const SIZE_DELTAS = { Small: 0, Medium: 0.5, Large: 1, Regular: 0 };
 
 function round2(n) {
   return Math.round(n * 100) / 100;
@@ -23,6 +27,20 @@ async function getSettingNumber(key, fallback) {
 
 async function getAllOrders() {
   return ordersRepository.findAll();
+}
+
+async function getReceiptSettings() {
+  const rows = await settingsRepository.findAll();
+  const values = Object.fromEntries(rows.map((row) => [row.key, row.value]));
+  return {
+    biz_name: values.biz_name || "",
+    biz_address: values.biz_address || "",
+    biz_phone: values.biz_phone || "",
+  };
+}
+
+async function getReportSummary() {
+  return ordersRepository.getReportSummary();
 }
 
 async function getOrderById(id) {
@@ -48,6 +66,8 @@ async function createOrder({
   table_or_address,
   staff_id,
   payment_method,
+  payment_details,
+  status = "completed",
   lines,
 }) {
   // --- Validate top-level fields ---
@@ -98,7 +118,11 @@ async function createOrder({
       resolvedAddons.push(addon);
     }
 
-    const unitPrice = Number(menuItem.price);
+    const size = line.size || (menuItem.is_drink ? "Small" : "Regular");
+    if (!(size in SIZE_DELTAS) || (!menuItem.is_drink && size !== "Regular")) {
+      throw new ApiError(400, `Invalid size "${size}" for ${menuItem.name}`);
+    }
+    const unitPrice = Number(menuItem.price) + SIZE_DELTAS[size];
     const addonsTotal = resolvedAddons.reduce((sum, a) => sum + Number(a.price), 0);
     const lineTotal = round2((unitPrice + addonsTotal) * line.qty);
 
@@ -107,7 +131,7 @@ async function createOrder({
       name_snapshot: menuItem.name,
       unit_price_snapshot: unitPrice,
       qty: line.qty,
-      size: line.size,
+      size,
       temperature: line.temperature,
       sugar: line.sugar,
       ice: line.ice,
@@ -124,6 +148,30 @@ async function createOrder({
   const deliveryFee =
     order_type === "delivery" ? await getSettingNumber("delivery_fee", 0) : 0;
   const total = round2(subtotal + tax + deliveryFee);
+  const isDraft = status === "draft";
+  if (!isDraft && status !== "completed") throw new ApiError(400, "New orders must be draft or completed");
+
+  let normalizedPaymentDetails = {};
+  if (!isDraft) {
+    if (payment_method === "split") {
+      const payments = payment_details?.payments;
+      if (!Array.isArray(payments) || payments.length !== 2) {
+        throw new ApiError(400, "Split payment requires exactly two payment entries");
+      }
+      const normalized = payments.map((payment) => ({ method: payment.method, amount: round2(Number(payment.amount)) }));
+      if (normalized.some((payment) => !PAYMENT_METHODS.includes(payment.method) || payment.method === "split" || payment.amount <= 0)) {
+        throw new ApiError(400, "Split payment methods and amounts are invalid");
+      }
+      if (Math.abs(normalized.reduce((sum, payment) => sum + payment.amount, 0) - total) > 0.01) {
+        throw new ApiError(400, "Split payment amounts must equal the order total");
+      }
+      normalizedPaymentDetails = { payments: normalized, processing: "recorded" };
+    } else {
+      normalizedPaymentDetails = { payments: [{ method: payment_method, amount: total }], processing: "recorded" };
+    }
+  }
+
+  const receiptSettings = await getReceiptSettings();
 
   const order_number = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
@@ -131,6 +179,33 @@ async function createOrder({
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
+
+    const recipeRows = isDraft ? [] : await itemIngredientsRepository.lockForMenuItems(
+      [...new Set(resolvedLines.map((line) => line.menu_item_id))],
+      client
+    );
+    const requiredByIngredient = new Map();
+    for (const line of resolvedLines) {
+      for (const recipe of recipeRows.filter((row) => row.menu_item_id === line.menu_item_id)) {
+        const current = requiredByIngredient.get(recipe.ingredient_id) || {
+          ingredient_id: recipe.ingredient_id,
+          name: recipe.name,
+          stock_qty: Number(recipe.stock_qty),
+          required: 0,
+        };
+        current.required += Number(recipe.quantity) * line.qty;
+        requiredByIngredient.set(recipe.ingredient_id, current);
+      }
+    }
+
+    for (const ingredient of requiredByIngredient.values()) {
+      if (ingredient.stock_qty < ingredient.required) {
+        throw new ApiError(
+          409,
+          `Not enough ${ingredient.name}: requires ${ingredient.required}, available ${ingredient.stock_qty}`
+        );
+      }
+    }
 
     const order = await ordersRepository.insertOrder(
       {
@@ -143,9 +218,26 @@ async function createOrder({
         tax,
         total,
         payment_method,
+        payment_details: normalizedPaymentDetails,
+        receipt_settings: receiptSettings,
+        status,
       },
       client
     );
+
+    for (const ingredient of requiredByIngredient.values()) {
+      const delta = -ingredient.required;
+      await ingredientsRepository.adjustStock(ingredient.ingredient_id, delta, client);
+      await inventoryAdjustmentsRepository.create(
+        {
+          ingredient_id: ingredient.ingredient_id,
+          delta,
+          reason: `Order ${order_number}`,
+          staff_id: staff_id ?? null,
+        },
+        client
+      );
+    }
 
     const savedLines = [];
     for (const line of resolvedLines) {
@@ -190,4 +282,4 @@ async function updateOrderStatus(id, status) {
   return ordersRepository.updateStatus(id, status);
 }
 
-module.exports = { getAllOrders, getOrderById, createOrder, updateOrderStatus };
+module.exports = { getAllOrders, getOrderById, createOrder, updateOrderStatus, getReportSummary };

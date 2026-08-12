@@ -5,6 +5,7 @@ const asyncHandler = require("../middleware/asyncHandler");
 const router = express.Router();
 
 router.get("/", asyncHandler(ordersController.getAll));
+router.get("/reports/summary", asyncHandler(ordersController.getReportSummary));
 router.get("/:id", asyncHandler(ordersController.getById));
 router.post("/", asyncHandler(ordersController.create));
 router.patch("/:id/status", asyncHandler(ordersController.updateStatus));
