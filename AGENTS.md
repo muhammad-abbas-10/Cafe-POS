@@ -21,16 +21,18 @@ npx skills add base44/skills
 
 ## Key Files
 
-- `src/`: frontend application source.
-- `src/api/base44Client.js`: frontend Base44 SDK client.
-- `vite.config.js`: Vite config and Base44 Vite plugin setup.
-- `.env.local`: local-only environment values; never commit secrets.
+- `frontend/src/`: frontend application source.
+- `frontend/src/api/base44Client.js`: frontend Base44 SDK client.
+- `frontend/vite.config.js`: Vite config and Base44 Vite plugin setup.
+- `frontend/.env.local`: local-only frontend environment values; never commit secrets.
+- `backend/`: Express API, PostgreSQL repositories, migrations, and backend environment.
 
 ## Working Notes
 
-- Use `base44 dev` as the default local development command when you need the local Base44 backend. It can run the backend and frontend together.
-- When docs or code mention the frontend being started automatically, that usually means the Base44 project config includes `site.serveCommand`, for example `"serveCommand": "npm run dev"` in `base44/config.jsonc`.
+- Run frontend and Base44 commands from `frontend/`.
+- Use `base44 dev` as the default local Base44 development command.
+- When docs or code mention the frontend being started automatically, that usually means the Base44 project config includes `site.serveCommand`, for example `"serveCommand": "npm run dev"` in `frontend/base44/config.jsonc`.
 - Use `npm run dev` only for frontend-only work against the hosted Base44 backend.
 - Prefer the existing Base44 CLI workflow over adding new npm scripts for Base44-specific tasks.
 - Reuse the existing SDK client and Vite plugin patterns before adding new Base44 integration paths.
-- Run the relevant checks from `package.json` before finishing code changes.
+- Run frontend checks from `frontend/package.json` and backend commands from `backend/package.json`.

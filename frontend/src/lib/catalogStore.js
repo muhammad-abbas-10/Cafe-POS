@@ -21,27 +21,10 @@ function fallbackImageFor(name) {
   return FALLBACK_IMAGE_BY_NAME.get(name?.trim().toLowerCase()) ?? null;
 }
 
-const ICON_BY_NAME = [
-  { match: "coffee", icon: "☕" },
-  { match: "juice", icon: "🧃" },
-  { match: "milk", icon: "🥛" },
-  { match: "rice", icon: "🍚" },
-  { match: "snack", icon: "🍪" },
-  { match: "dessert", icon: "🍰" },
-];
-const DEFAULT_ICON = "🍽️";
-
-function iconForCategoryName(name) {
-  const lower = name.toLowerCase();
-  const found = ICON_BY_NAME.find((entry) => lower.includes(entry.match));
-  return found ? found.icon : DEFAULT_ICON;
-}
-
 function toFrontendCategory(row) {
   return {
     id: row.id,
     name: row.name,
-    icon: iconForCategoryName(row.name),
     sort_order: row.sort_order,
   };
 }

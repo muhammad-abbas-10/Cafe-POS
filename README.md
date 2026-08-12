@@ -6,10 +6,19 @@ Use this repository to run and edit the app locally, then publish changes back t
 
 Any change pushed to the repo will also be reflected in the Base44 Builder.
 
+## Project Layout
+
+```text
+frontend/  React, Vite, Base44 configuration, assets, and frontend environment
+backend/   Express API, PostgreSQL repositories, migrations, and backend environment
+```
+
+Run frontend commands from `frontend/` and backend commands from `backend/`.
+
 ## Prerequisites
 
 1. Clone the repository using the project's Git URL.
-2. Navigate to the project directory.
+2. Navigate to the frontend directory: `cd frontend`.
 3. Install dependencies: `npm install`.
 4. Install the Base44 CLI: `npm install -g base44@latest`.
 
@@ -17,7 +26,7 @@ See the [Base44 CLI docs](https://docs.db.com/developers/references/cli/get-star
 
 ## Run Locally
 
-Run the full local development environment from the project root:
+Run the Base44 development environment from the `frontend/` directory:
 
 ```bash
 base44 dev
@@ -35,11 +44,11 @@ For example, when the Base44 project config includes a `serveCommand`, `base44 d
 }
 ```
 
-In a Base44 project this lives in `base44/config.jsonc`.
+In this project it lives in `frontend/base44/config.jsonc`.
 
 ## Run Only The Frontend
 
-If you only want to work on the frontend against the hosted Base44 backend, run:
+If you only want to work on the frontend against the hosted Base44 backend, run this from `frontend/`:
 
 ```bash
 npm run dev
@@ -59,7 +68,7 @@ In development only, the backend defaults to `http://localhost:5173` and `http:/
 
 ## Use The Hosted Backend
 
-For frontend-only development, create or update `.env.local` in the project root:
+For frontend-only development, create or update `frontend/.env.local`:
 
 ```bash
 VITE_BASE44_APP_ID=your_app_id
@@ -70,11 +79,11 @@ VITE_BASE44_APP_BASE_URL=https://your-app.db.app
 
 `VITE_BASE44_APP_BASE_URL` tells the Base44 Vite plugin where to send local `/api` requests. Point it at your deployed Base44 app URL when you want the local frontend to use the hosted backend.
 
-When you use `base44 dev`, the command injects the local Base44 values for you, so `.env.local` is mainly needed for frontend-only workflows.
+When you use `base44 dev`, the command injects the local Base44 values for you, so `frontend/.env.local` is mainly needed for frontend-only workflows.
 
 ## Publish Your Changes
 
-After pushing your changes to git, open the Base44 dashboard and publish the app:
+After pushing your changes to git, run this from `frontend/` to open the Base44 dashboard and publish the app:
 
 ```bash
 base44 dashboard open

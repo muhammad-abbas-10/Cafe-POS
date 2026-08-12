@@ -183,7 +183,7 @@ export default function MenuManagement() {
       </div>
 
       <div className="flex gap-2 mb-4 overflow-x-auto no-scrollbar">
-        {[{ id: "all", name: "All", icon: "🗂️" }, ...categories].map((c) => {
+        {[{ id: "all", name: "All" }, ...categories].map((c) => {
           const active = catFilter === c.id;
           return (
             <button
@@ -193,7 +193,7 @@ export default function MenuManagement() {
                 active ? "border-[hsl(var(--accent))] bg-[hsl(var(--secondary))] text-[hsl(var(--accent))]" : "border-[hsl(var(--border))] text-[hsl(var(--muted-foreground))]"
               }`}
             >
-              <span className="text-sm leading-none">{c.icon}</span> {c.name}
+              {c.name}
             </button>
           );
         })}

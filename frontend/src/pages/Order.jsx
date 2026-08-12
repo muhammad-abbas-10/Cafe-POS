@@ -81,7 +81,7 @@ export default function Order() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search items…"
-              className="w-full h-11 pl-10 pr-4 rounded-[10px] bg-[hsl(var(--card))] border border-[hsl(var(--border))] text-sm placeholder:text-[hsl(var(--muted-foreground))] focus:outline-none focus:border-[hsl(var(--primary))]"
+              className="w-full h-11 pl-10 pr-4 rounded-[10px] bg-[hsl(var(--card))] border border-[hsl(var(--border))] text-sm text-white placeholder:text-[hsl(var(--muted-foreground))] focus:outline-none focus:border-[hsl(var(--primary))]"
             />
           </div>
         </div>
@@ -100,7 +100,6 @@ export default function Order() {
                     : "border-[#3A322C] bg-[hsl(var(--card))] text-[#F3EAE3] hover:bg-[hsl(var(--secondary))]"
                 }`}
               >
-                <span className="text-lg leading-none">{c.icon}</span>
                 <span className="text-sm font-medium">{c.name}</span>
               </button>
             );

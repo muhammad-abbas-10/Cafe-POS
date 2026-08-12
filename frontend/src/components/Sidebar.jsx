@@ -2,7 +2,7 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
 import {
-  ShoppingBag, History, Boxes, BarChart3, UtensilsCrossed,
+  Coffee, ShoppingBag, History, Boxes, BarChart3, UtensilsCrossed,
   Users, Settings, LogOut,
 } from "lucide-react";
 
@@ -24,7 +24,7 @@ export default function Sidebar() {
     <>
     <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-[76px] flex-col items-center py-5 gap-1 bg-[hsl(var(--card))] border-r border-[hsl(var(--border))] z-30">
       <div className="w-11 h-11 rounded-xl bg-[hsl(var(--primary))] flex items-center justify-center mb-3 shadow-none">
-        <span className="text-white text-xl">☕</span>
+        <Coffee className="text-white" size={24} strokeWidth={1.8} aria-hidden="true" />
       </div>
 
       <nav className="flex-1 flex flex-col items-center gap-1.5 no-scrollbar overflow-y-auto">
