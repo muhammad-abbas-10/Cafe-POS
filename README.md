@@ -89,6 +89,12 @@ After pushing your changes to git, run this from `frontend/` to open the Base44 
 base44 dashboard open
 ```
 
+## Deploy The Frontend To Vercel
+
+The repository-level `vercel.json` installs and builds the Vite app from `frontend/`. When importing the GitHub repository, leave Vercel's Root Directory at the repository root and do not override the commands from `vercel.json`.
+
+Configure `VITE_API_URL` in the Vercel project environment to point to the deployed backend API, including `/api`.
+
 ## Docs & Support
 
 Documentation: [https://docs.db.com/Integrations/Using-GitHub](https://docs.db.com/Integrations/Using-GitHub)
