@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useMemo } from "react";
-import { TAX_RATE, sizesFor, ADDONS } from "@/lib/cafeData";
+import { sizesFor } from "@/lib/cafeData";
+import { fetchSettings } from "@/lib/catalogStore";
 
 const CartContext = createContext(null);
 
@@ -10,6 +11,16 @@ export function CartProvider({ children }) {
   const [orderType, setOrderType] = useState("dine-in"); // dine-in | takeaway | delivery
   const [table, setTable] = useState("");
   const [billDiscount, setBillDiscount] = useState(null); // { code, type, value }
+  const [taxRate, setTaxRate] = useState(0);
+  const [deliveryFeeSetting, setDeliveryFeeSetting] = useState(0);
+
+  React.useEffect(() => {
+    fetchSettings().then((rows) => {
+      const values = Object.fromEntries(rows.map((row) => [row.key, row.value]));
+      setTaxRate(Number(values.tax_rate) || 0);
+      setDeliveryFeeSetting(Number(values.delivery_fee) || 0);
+    }).catch(() => {});
+  }, []);
 
   const addItem = useCallback((entry) => {
     const line = {
@@ -70,12 +81,12 @@ export function CartProvider({ children }) {
           ? (subtotal * billDiscount.value) / 100
           : Math.min(billDiscount.value, subtotal);
     }
-    const deliveryFee = orderType === "delivery" ? Number(localStorage.getItem("pos_delivery_fee") || "3.5") : 0;
+    const deliveryFee = orderType === "delivery" ? deliveryFeeSetting : 0;
     const taxedBase = subtotal - discountAmount + deliveryFee;
-    const tax = taxedBase * TAX_RATE;
+    const tax = taxedBase * (taxRate / 100);
     const total = taxedBase + tax;
     return { subtotal, discountAmount, deliveryFee, tax, total };
-  }, [items, billDiscount, orderType]);
+  }, [items, billDiscount, orderType, taxRate, deliveryFeeSetting]);
 
   const value = {
     items, addItem, updateLine, removeLine, setLineNote, clear,
@@ -93,4 +104,4 @@ export function useCart() {
   return ctx;
 }
 
-export { sizesFor, ADDONS };
+export { sizesFor };

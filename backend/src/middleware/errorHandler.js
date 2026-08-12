@@ -1,14 +1,15 @@
 function errorHandler(err, req, res, next) {
-  const statusCode = err.statusCode || 500;
+  const statusCode = err.statusCode || err.status || 500;
+  const isPayloadTooLarge = err.type === "entity.too.large" || statusCode === 413;
   const isOperational = err.isOperational || false;
 
-  if (!isOperational) {
+  if (!isOperational && !isPayloadTooLarge) {
     console.error("UNEXPECTED ERROR:", err);
   }
 
   res.status(statusCode).json({
     error: {
-      message: isOperational ? err.message : "Something went wrong",
+      message: isOperational || isPayloadTooLarge ? err.message : "Something went wrong",
     },
   });
 }

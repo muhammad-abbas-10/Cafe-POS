@@ -12,6 +12,54 @@ import {
   deleteItem,
 } from "@/lib/catalogStore";
 
+const MAX_IMAGE_DIMENSION = 900;
+const MAX_IMAGE_BYTES = 700 * 1024;
+const IMAGE_QUALITY_STEPS = [0.82, 0.72, 0.62, 0.54];
+
+function dataUrlBytes(dataUrl) {
+  const base64 = dataUrl.split(",")[1] || "";
+  return Math.ceil((base64.length * 3) / 4);
+}
+
+function imageToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const image = new Image();
+
+    image.onload = () => {
+      const scale = Math.min(1, MAX_IMAGE_DIMENSION / Math.max(image.width, image.height));
+      const width = Math.max(1, Math.round(image.width * scale));
+      const height = Math.max(1, Math.round(image.height * scale));
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
+
+      canvas.width = width;
+      canvas.height = height;
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, width, height);
+      context.drawImage(image, 0, 0, width, height);
+      URL.revokeObjectURL(objectUrl);
+
+      const best = IMAGE_QUALITY_STEPS
+        .map((quality) => canvas.toDataURL("image/jpeg", quality))
+        .find((dataUrl) => dataUrlBytes(dataUrl) <= MAX_IMAGE_BYTES);
+
+      if (best) {
+        resolve(best);
+      } else {
+        reject(new Error("Image is too large. Please choose a smaller photo."));
+      }
+    };
+
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("Couldn't read that image. Please choose another file."));
+    };
+
+    image.src = objectUrl;
+  });
+}
+
 export default function MenuManagement() {
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
@@ -288,13 +336,23 @@ function CategoryManager({ categories, items, onClose, onCreate, onRename, onDel
 
 function ItemEditor({ item, categories, onClose, onSave }) {
   const [form, setForm] = useState(item);
+  const [imageBusy, setImageBusy] = useState(false);
+  const [imageError, setImageError] = useState(null);
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
-  const handleImage = (event) => {
+  const handleImage = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => set("image", reader.result);
-    reader.readAsDataURL(file);
+
+    try {
+      setImageBusy(true);
+      setImageError(null);
+      set("image", await imageToDataUrl(file));
+    } catch (err) {
+      setImageError(err.message);
+      event.target.value = "";
+    } finally {
+      setImageBusy(false);
+    }
   };
   return (
     <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center" onClick={onClose}>
@@ -304,7 +362,7 @@ function ItemEditor({ item, categories, onClose, onSave }) {
           <button onClick={onClose}><X size={18} strokeWidth={1.5} /></button>
         </div>
         <div className="space-y-3">
-          <Field label="Photo"><div className="flex items-center gap-3"><div className="w-16 h-16 rounded-[10px] bg-[hsl(var(--muted))] overflow-hidden flex items-center justify-center shrink-0">{form.image ? <img src={form.image} alt="" className="w-full h-full object-cover" /> : <ImageIcon size={20} strokeWidth={1.5} className="text-[hsl(var(--muted-foreground))]" />}</div><label className="h-9 px-3 rounded-[8px] border border-[hsl(var(--border))] text-xs cursor-pointer flex items-center gap-1.5"><ImageIcon size={14} strokeWidth={1.5} /> Choose photo<input type="file" accept="image/*" onChange={handleImage} className="hidden" /></label></div></Field>
+          <Field label="Photo"><div className="flex items-center gap-3"><div className="w-16 h-16 rounded-[10px] bg-[hsl(var(--muted))] overflow-hidden flex items-center justify-center shrink-0">{form.image ? <img src={form.image} alt="" className="w-full h-full object-cover" /> : <ImageIcon size={20} strokeWidth={1.5} className="text-[hsl(var(--muted-foreground))]" />}</div><div><label className={`h-9 px-3 rounded-[8px] border border-[hsl(var(--border))] text-xs flex items-center gap-1.5 ${imageBusy ? "opacity-60 cursor-wait" : "cursor-pointer"}`}><ImageIcon size={14} strokeWidth={1.5} /> {imageBusy ? "Preparing..." : "Choose photo"}<input type="file" accept="image/*" onChange={handleImage} disabled={imageBusy} className="hidden" /></label>{imageError && <div className="mt-1 text-xs text-red-400">{imageError}</div>}</div></div></Field>
           <Field label="Name"><input value={form.name} onChange={(e) => set("name", e.target.value)} className="input" /></Field>
           <Field label="Description"><input value={form.description} onChange={(e) => set("description", e.target.value)} className="input" /></Field>
           <Field label="Price (Rs)"><input type="number" step="0.01" value={form.price} onChange={(e) => set("price", Number(e.target.value))} className="input" /></Field>
@@ -313,7 +371,7 @@ function ItemEditor({ item, categories, onClose, onSave }) {
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.available} onChange={(e) => set("available", e.target.checked)} /> Available</label>
         <div className="flex gap-2 mt-4">
           <button onClick={onClose} className="flex-1 h-10 rounded-[8px] border border-[hsl(var(--border))] text-sm">Cancel</button>
-          <button onClick={() => onSave(form)} className="flex-1 h-10 rounded-[8px] bg-[hsl(var(--primary))] text-white text-sm">Save</button>
+          <button onClick={() => onSave(form)} disabled={imageBusy} className="flex-1 h-10 rounded-[8px] bg-[hsl(var(--primary))] text-white text-sm disabled:opacity-50">Save</button>
         </div>
         <style>{`.input{width:100%;height:40px;border-radius:8px;border:1px solid hsl(var(--border));padding:0 12px;font-size:14px;background:transparent;color:hsl(var(--foreground));outline:none}.input:focus{border-color:hsl(var(--primary))}.category-select{background:#2F241F}.category-select option{background:#2F241F;color:#fff}`}</style>
       </div>

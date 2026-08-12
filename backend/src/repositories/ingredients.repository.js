@@ -15,6 +15,14 @@ async function findById(id) {
   return result.rows[0];
 }
 
+async function findByName(name) {
+  const result = await pool.query(
+    "SELECT * FROM ingredients WHERE lower(name) = lower($1)",
+    [name]
+  );
+  return result.rows[0];
+}
+
 async function create({ name, unit, stock_qty, threshold }) {
   const result = await pool.query(
     `INSERT INTO ingredients (name, unit, stock_qty, threshold)
@@ -55,4 +63,4 @@ async function adjustStock(id, delta, client = pool) {
   return result.rows[0];
 }
 
-module.exports = { findAll, findById, create, update, remove, adjustStock };
+module.exports = { findAll, findById, findByName, create, update, remove, adjustStock };

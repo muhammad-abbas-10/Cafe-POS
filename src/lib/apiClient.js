@@ -8,10 +8,11 @@ async function request(path, options = {}) {
 
   if (res.status === 204) return null;
 
-  const data = await res.json();
+  const contentType = res.headers.get("content-type") || "";
+  const data = contentType.includes("application/json") ? await res.json() : null;
 
   if (!res.ok) {
-    throw new Error(data?.error?.message || "Something went wrong");
+    throw new Error(data?.error?.message || `Request failed (${res.status})`);
   }
 
   return data;

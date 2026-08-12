@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Plus, Minus, Trash2, StickyNote, ArrowRight, ShoppingBag } from "lucide-react";
 import { formatPrice } from "@/lib/cafeData";
-import { fetchCategories, fetchItems } from "@/lib/catalogStore";
+import { fetchAddons, fetchCategories, fetchItems } from "@/lib/catalogStore";
 import { useCart } from "@/lib/CartContext";
 import ItemModifierSheet from "@/components/ItemModifierSheet";
 
@@ -11,6 +11,7 @@ export default function Order() {
   const { items, addItem, totals, orderType, setOrderType, table, setTable, removeLine, updateLine, setLineNote, billDiscount } = useCart();
   const [categories, setCategories] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
+  const [addons, setAddons] = useState([]);
   const [activeCat, setActiveCat] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -24,10 +25,11 @@ export default function Order() {
 
     async function load() {
       try {
-        const [cats, menu] = await Promise.all([fetchCategories(), fetchItems()]);
+        const [cats, menu, addonRows] = await Promise.all([fetchCategories(), fetchItems(), fetchAddons()]);
         if (cancelled) return;
         setCategories(cats);
         setMenuItems(menu);
+        setAddons(addonRows.filter((addon) => addon.active !== false));
         setActiveCat(cats[0]?.id ?? null);
       } catch (err) {
         if (!cancelled) setLoadError(err.message);
@@ -250,7 +252,7 @@ export default function Order() {
       )}
 
       {modifierItem && (
-        <ItemModifierSheet item={modifierItem} onClose={() => setModifierItem(null)} onAdd={(entry) => { addItem(entry); setModifierItem(null); }} />
+        <ItemModifierSheet item={modifierItem} availableAddons={addons} onClose={() => setModifierItem(null)} onAdd={(entry) => { addItem(entry); setModifierItem(null); }} />
       )}
       {noteFor && (
         <NoteModal line={noteFor} onClose={() => setNoteFor(null)} onSave={(t) => { setLineNote(noteFor.lineId, t); setNoteFor(null); }} />

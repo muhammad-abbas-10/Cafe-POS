@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { X, Plus, Minus, Check } from "lucide-react";
-import { sizesFor, ADDONS, SUGAR_OPTIONS, ICE_OPTIONS, formatPrice } from "@/lib/cafeData";
+import { sizesFor, SUGAR_OPTIONS, ICE_OPTIONS, formatPrice } from "@/lib/cafeData";
 
-export default function ItemModifierSheet({ item, onClose, onAdd }) {
+export default function ItemModifierSheet({ item, availableAddons = [], onClose, onAdd }) {
   const sizes = sizesFor(item);
   const [size, setSize] = useState(sizes[Math.min(1, sizes.length - 1)]);
   const [temp, setTemp] = useState(item.drink ? "hot" : "n/a");
@@ -99,7 +99,7 @@ export default function ItemModifierSheet({ item, onClose, onAdd }) {
 
           <Section title="Add-ons">
             <div className="space-y-2">
-              {ADDONS.map((a) => {
+              {availableAddons.map((a) => {
                 const on = !!addons.find((x) => x.id === a.id);
                 return (
                   <button key={a.id} onClick={() => toggleAddon(a)} className="w-full flex items-center justify-between p-3 rounded-[10px] border border-[hsl(var(--border))]">

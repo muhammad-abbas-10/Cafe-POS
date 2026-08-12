@@ -63,7 +63,14 @@ async function updateIngredient(id, data) {
 
 async function deleteIngredient(id) {
   await getIngredientById(id); // throws 404 if it doesn't exist
-  return ingredientsRepository.remove(id);
+  try {
+    return await ingredientsRepository.remove(id);
+  } catch (err) {
+    if (err.code === "23503") {
+      throw new ApiError(409, "This ingredient has stock history and cannot be removed");
+    }
+    throw err;
+  }
 }
 
 module.exports = {
