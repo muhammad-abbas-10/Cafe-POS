@@ -115,10 +115,25 @@ export async function deleteItem(id) {
   await apiDelete(`/menu-items/${id}`);
 }
 
+export async function fetchItemIngredients(id) {
+  return apiGet(`/menu-items/${id}/ingredients`);
+}
+
+export async function updateItemIngredients(id, recipe) {
+  return apiPut(`/menu-items/${id}/ingredients`, { recipe });
+}
+
 // --- Ingredients ---
 
 export async function fetchIngredients() {
   return apiGet("/ingredients");
+}
+
+// --- Addons ---
+
+export async function fetchAddons() {
+  const rows = await apiGet("/addons");
+  return rows.map((addon) => ({ ...addon, price: Number(addon.price) }));
 }
 
 export async function createIngredient({ name, unit, stock_qty, threshold }) {
@@ -132,8 +147,6 @@ export async function updateIngredient(id, { name, unit, stock_qty, threshold })
 export async function deleteIngredient(id) {
   await apiDelete(`/ingredients/${id}`);
 }
-
-export async function fetchAddons() { return apiGet("/addons"); }
 
 // --- Inventory adjustments ---
 
@@ -162,5 +175,6 @@ export async function setSetting(key, value) { return apiPut(`/settings/${key}`,
 
 // --- Orders ---
 export async function fetchOrders() { return apiGet("/orders"); }
+export async function fetchReportSummary() { return apiGet("/orders/reports/summary"); }
 export async function fetchOrderById(id) { return apiGet(`/orders/${id}`); }
 export async function updateOrderStatus(id, status) { return apiPatch(`/orders/${id}/status`, { status }); }

@@ -99,6 +99,9 @@ export default function ItemModifierSheet({ item, availableAddons = [], onClose,
 
           <Section title="Add-ons">
             <div className="space-y-2">
+              {availableAddons.length === 0 && (
+                <div className="text-xs text-[hsl(var(--muted-foreground))]">No add-ons available.</div>
+              )}
               {availableAddons.map((a) => {
                 const on = !!addons.find((x) => x.id === a.id);
                 return (

@@ -14,7 +14,6 @@ import Inventory from '@/pages/Inventory';
 import Reports from '@/pages/Reports';
 import MenuManagement from '@/pages/MenuManagement';
 import StaffShift from '@/pages/StaffShift';
-import Promotions from '@/pages/Promotions';
 import Settings from '@/pages/Settings';
 
 function ProtectedRoute({ children }) {
@@ -46,8 +45,6 @@ const MainApp = () => {
         <Route path="/reports" element={<Reports />} />
         <Route path="/menu" element={<MenuManagement />} />
         <Route path="/staff" element={<StaffShift />} />
-        <Route path="/promotions" element={<Promotions />} />
-        <Route path="/offers" element={<Navigate to="/promotions" replace />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/dashboard" element={<Navigate to="/order" replace />} />
         <Route path="/checkout" element={<Navigate to="/payment" replace />} />

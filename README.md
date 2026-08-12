@@ -47,6 +47,16 @@ npm run dev
 
 Open the local URL printed by Vite.
 
+## Backend CORS
+
+Set `CORS_ORIGINS` in `backend/.env` to the exact frontend origins allowed to call the API. Separate multiple origins with commas and do not include URL paths.
+
+```env
+CORS_ORIGINS=https://cafe.example.com,https://admin.cafe.example.com
+```
+
+In development only, the backend defaults to `http://localhost:5173` and `http://127.0.0.1:5173`. In production, an unset allowlist denies all browser origins.
+
 ## Use The Hosted Backend
 
 For frontend-only development, create or update `.env.local` in the project root:

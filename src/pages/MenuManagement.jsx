@@ -10,6 +10,9 @@ import {
   createItem,
   updateItem,
   deleteItem,
+  fetchIngredients,
+  fetchItemIngredients,
+  updateItemIngredients,
 } from "@/lib/catalogStore";
 
 const MAX_IMAGE_DIMENSION = 900;
@@ -63,6 +66,7 @@ function imageToDataUrl(file) {
 export default function MenuManagement() {
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
+  const [ingredients, setIngredients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [editing, setEditing] = useState(null);
@@ -74,10 +78,11 @@ export default function MenuManagement() {
 
     async function load() {
       try {
-        const [cats, menu] = await Promise.all([fetchCategories(), fetchItems()]);
+        const [cats, menu, ingredientRows] = await Promise.all([fetchCategories(), fetchItems(), fetchIngredients()]);
         if (cancelled) return;
         setCategories(cats);
         setItems(menu);
+        setIngredients(ingredientRows);
       } catch (err) {
         if (!cancelled) setLoadError(err.message);
       } finally {
@@ -112,13 +117,15 @@ export default function MenuManagement() {
 
   const save = async (item) => {
     try {
+      let saved;
       if (item.id) {
-        const updated = await updateItem(item.id, item);
-        setItems(items.map((i) => (i.id === updated.id ? updated : i)));
+        saved = await updateItem(item.id, item);
+        setItems(items.map((i) => (i.id === saved.id ? saved : i)));
       } else {
-        const created = await createItem(item);
-        setItems([...items, created]);
+        saved = await createItem(item);
+        setItems([...items, saved]);
       }
+      await updateItemIngredients(saved.id, item.recipe || []);
       setEditing(null);
     } catch (err) {
       alert(err.message);
@@ -227,7 +234,7 @@ export default function MenuManagement() {
         </table>
       </div>
 
-      {editing && <ItemEditor item={editing} categories={categories} onClose={() => setEditing(null)} onSave={save} />}
+      {editing && <ItemEditor item={editing} categories={categories} ingredients={ingredients} onClose={() => setEditing(null)} onSave={save} />}
       {manageCats && (
         <CategoryManager
           categories={categories}
@@ -334,11 +341,29 @@ function CategoryManager({ categories, items, onClose, onCreate, onRename, onDel
   );
 }
 
-function ItemEditor({ item, categories, onClose, onSave }) {
+function ItemEditor({ item, categories, ingredients, onClose, onSave }) {
   const [form, setForm] = useState(item);
+  const [recipe, setRecipe] = useState([]);
+  const [recipeBusy, setRecipeBusy] = useState(Boolean(item.id));
   const [imageBusy, setImageBusy] = useState(false);
   const [imageError, setImageError] = useState(null);
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+  useEffect(() => {
+    if (!item.id) return;
+    let cancelled = false;
+    fetchItemIngredients(item.id)
+      .then((rows) => { if (!cancelled) setRecipe(rows.map((row) => ({ ingredient_id: row.ingredient_id, quantity: Number(row.quantity) }))); })
+      .catch((err) => { if (!cancelled) setImageError(`Couldn't load recipe: ${err.message}`); })
+      .finally(() => { if (!cancelled) setRecipeBusy(false); });
+    return () => { cancelled = true; };
+  }, [item.id]);
+  const setRecipeQuantity = (ingredientId, value) => {
+    const quantity = Number(value);
+    setRecipe((current) => {
+      const without = current.filter((row) => row.ingredient_id !== ingredientId);
+      return quantity > 0 ? [...without, { ingredient_id: ingredientId, quantity }] : without;
+    });
+  };
   const handleImage = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -356,7 +381,7 @@ function ItemEditor({ item, categories, onClose, onSave }) {
   };
   return (
     <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center" onClick={onClose}>
-      <div className="bg-[hsl(var(--card))] w-full max-w-md rounded-[12px] border border-[hsl(var(--border))] p-5" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-[hsl(var(--card))] w-full max-w-md max-h-[90vh] overflow-y-auto no-scrollbar rounded-[12px] border border-[hsl(var(--border))] p-5" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <div className="text-sm font-medium">{item.id ? "Edit item" : "New item"}</div>
           <button onClick={onClose}><X size={18} strokeWidth={1.5} /></button>
@@ -369,9 +394,31 @@ function ItemEditor({ item, categories, onClose, onSave }) {
           <Field label="Category"><select value={form.category} onChange={(e) => set("category", e.target.value)} className="input category-select">{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></Field>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.drink} onChange={(e) => set("drink", e.target.checked)} /> Has drink modifiers</label>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.available} onChange={(e) => set("available", e.target.checked)} /> Available</label>
+          <Field label="Recipe (quantity used per item)">
+            {recipeBusy ? <div className="text-xs text-[hsl(var(--muted-foreground))]">Loading recipe...</div> : (
+              <div className="space-y-2 max-h-44 overflow-y-auto no-scrollbar">
+                {ingredients.length === 0 && <div className="text-xs text-[hsl(var(--muted-foreground))]">Add ingredients in Stock first.</div>}
+                {ingredients.map((ingredient) => (
+                  <label key={ingredient.id} className="flex items-center gap-2 text-sm">
+                    <span className="flex-1">{ingredient.name}</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.001"
+                      value={recipe.find((row) => row.ingredient_id === ingredient.id)?.quantity || ""}
+                      onChange={(event) => setRecipeQuantity(ingredient.id, event.target.value)}
+                      placeholder="0"
+                      className="input !w-24"
+                    />
+                    <span className="w-10 text-xs text-[hsl(var(--muted-foreground))]">{ingredient.unit}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </Field>
         <div className="flex gap-2 mt-4">
           <button onClick={onClose} className="flex-1 h-10 rounded-[8px] border border-[hsl(var(--border))] text-sm">Cancel</button>
-          <button onClick={() => onSave(form)} disabled={imageBusy} className="flex-1 h-10 rounded-[8px] bg-[hsl(var(--primary))] text-white text-sm disabled:opacity-50">Save</button>
+          <button onClick={() => onSave({ ...form, recipe })} disabled={imageBusy || recipeBusy} className="flex-1 h-10 rounded-[8px] bg-[hsl(var(--primary))] text-white text-sm disabled:opacity-50">Save</button>
         </div>
         <style>{`.input{width:100%;height:40px;border-radius:8px;border:1px solid hsl(var(--border));padding:0 12px;font-size:14px;background:transparent;color:hsl(var(--foreground));outline:none}.input:focus{border-color:hsl(var(--primary))}.category-select{background:#2F241F}.category-select option{background:#2F241F;color:#fff}`}</style>
       </div>

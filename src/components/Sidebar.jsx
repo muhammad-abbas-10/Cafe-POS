@@ -3,7 +3,7 @@ import { NavLink } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
 import {
   ShoppingBag, History, Boxes, BarChart3, UtensilsCrossed,
-  Users, Ticket, Settings, LogOut,
+  Users, Settings, LogOut,
 } from "lucide-react";
 
 const NAV = [
@@ -13,7 +13,6 @@ const NAV = [
   { to: "/reports", label: "Reports", Icon: BarChart3, roles: ["admin", "manager", "cashier", "kitchen"] },
   { to: "/menu", label: "Menu", Icon: UtensilsCrossed, roles: ["admin", "manager", "cashier", "kitchen"] },
   { to: "/staff", label: "Staff", Icon: Users, roles: ["admin", "manager", "cashier", "kitchen"] },
-  { to: "/promotions", label: "Offers", Icon: Ticket, roles: ["admin", "manager", "cashier", "kitchen"] },
   { to: "/settings", label: "Settings", Icon: Settings, roles: ["admin", "manager", "cashier", "kitchen"] },
 ];
 
