@@ -1,109 +1,52 @@
-import { db } from "@/lib/db";
-
-import React, { createContext, useState, useContext, useEffect } from 'react';
-
-import { appParams } from '@/lib/app-params';
+import React, { createContext, useContext, useState } from "react";
+import { getToken, setToken, clearAuthStorage } from "@/lib/apiClient";
 
 const AuthContext = createContext();
-const mockUser = { id: '...', name: '...', role: '...' };
+
+function isUsableToken(token) {
+  if (!token) return false;
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+    return payload.role === "admin" && payload.exp * 1000 > Date.now();
+  } catch {
+    return false;
+  }
+}
+
+function getSavedUser() {
+  try {
+    const saved = localStorage.getItem("pos_auth_user");
+    return saved ? JSON.parse(saved) : null;
+  } catch {
+    localStorage.removeItem("pos_auth_user");
+    return null;
+  }
+}
+
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(mockUser);
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
-  const [isLoadingAuth, setIsLoadingAuth] = useState(false);
-  const [isLoadingPublicSettings, setIsLoadingPublicSettings] = useState(false);
-  const [authError, setAuthError] = useState(null);
-  const [authChecked, setAuthChecked] = useState(true);
-  const [appPublicSettings, setAppPublicSettings] = useState(null); // Contains only { id, public_settings }
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    const valid = isUsableToken(getToken());
+    if (!valid) clearAuthStorage();
+    return valid;
+  });
+  const [user, setUser] = useState(getSavedUser);
 
-  useEffect(() => {
-    checkAppState();
-  }, []);
-
-  const checkAppState = async () => {
-    try {
-      setAuthError(null);
-      if (globalThis.__B44_DB__ && appParams.appId) {
-        setIsLoadingPublicSettings(true);
-        const currentUser = await db.auth.me();
-        if (currentUser) {
-          setUser(currentUser);
-          setIsAuthenticated(true);
-        }
-        setIsLoadingPublicSettings(false);
-      } else {
-        setUser(mockUser);
-        setIsAuthenticated(true);
-        setIsLoadingAuth(false);
-        setIsLoadingPublicSettings(false);
-        setAuthChecked(true);
-      }
-    } catch (error) {
-      console.warn('Auth check fallback to demo mode:', error);
-      setUser(mockUser);
-      setIsAuthenticated(true);
-      setIsLoadingPublicSettings(false);
-      setIsLoadingAuth(false);
-      setAuthChecked(true);
-    }
+  const login = (token, userData) => {
+    setToken(token);
+    localStorage.setItem("pos_auth_user", JSON.stringify(userData));
+    setUser(userData);
+    setIsAuthenticated(true);
   };
 
-  const checkUserAuth = async () => {
-    try {
-      // Now check if the user is authenticated
-      setIsLoadingAuth(true);
-      const currentUser = await db.auth.me();
-      setUser(currentUser);
-      setIsAuthenticated(true);
-      setIsLoadingAuth(false);
-      setAuthChecked(true);
-    } catch (error) {
-      console.error('User auth check failed:', error);
-      setIsLoadingAuth(false);
-      setIsAuthenticated(false);
-      setAuthChecked(true);
-      
-      // If user auth fails, it might be an expired token
-      if (error.status === 401 || error.status === 403) {
-        setAuthError({
-          type: 'auth_required',
-          message: 'Authentication required'
-        });
-      }
-    }
-  };
-
-  const logout = (shouldRedirect = true) => {
+  const logout = () => {
+    clearAuthStorage();
     setUser(null);
     setIsAuthenticated(false);
-    
-    if (shouldRedirect) {
-      // Use the SDK's logout method which handles token cleanup and redirect
-      db.auth.logout(window.location.href);
-    } else {
-      // Just remove the token without redirect
-      db.auth.logout();
-    }
-  };
-
-  const navigateToLogin = () => {
-    // Use the SDK's redirectToLogin method
-    db.auth.redirectToLogin(window.location.href);
+    window.location.replace("/login");
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      isAuthenticated, 
-      isLoadingAuth,
-      isLoadingPublicSettings,
-      authError,
-      appPublicSettings,
-      authChecked,
-      logout,
-      navigateToLogin,
-      checkUserAuth,
-      checkAppState
-    }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
@@ -112,7 +55,7 @@ export const AuthProvider = ({ children }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

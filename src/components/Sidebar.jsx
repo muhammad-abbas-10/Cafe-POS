@@ -1,7 +1,6 @@
-import { db } from "@/lib/db";
-
-import React, { useState, useEffect } from "react";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import React from "react";
+import { NavLink } from "react-router-dom";
+import { useAuth } from "@/lib/AuthContext";
 import {
   ShoppingBag, History, Boxes, BarChart3, UtensilsCrossed,
   Users, Ticket, Settings, LogOut,
@@ -18,12 +17,9 @@ const NAV = [
   { to: "/settings", label: "Settings", Icon: Settings, roles: ["admin", "manager", "cashier", "kitchen"] },
 ];
 
-const ROLE_HOME = { admin: "/order", manager: "/order", cashier: "/order", kitchen: "/order" };
-const ROLE_LABEL = { admin: "Admin", manager: "Manager", cashier: "Cashier", kitchen: "Kitchen" };
-
-export default function Sidebar({ role, onRoleChange }) {
-  const navigate = useNavigate();
-  const items = NAV.filter((n) => n.roles.includes(role));
+export default function Sidebar() {
+  const { logout } = useAuth();
+  const items = NAV.filter((n) => n.roles.includes("admin"));
 
   return (
     <>
@@ -51,12 +47,16 @@ export default function Sidebar({ role, onRoleChange }) {
         ))}
       </nav>
 
-      <RoleSwitcher role={role} onRoleChange={(r) => { onRoleChange(r); navigate(ROLE_HOME[r] || "/order"); }} />
+      <div className="mb-1 w-12 h-7 rounded-lg border border-[#3A322C] text-[10px] font-medium text-[#A89C8E] flex items-center justify-center">
+        Admin
+      </div>
 
       <button
-        onClick={() => alert("Session active")}
+        type="button"
+        onClick={logout}
         className="w-12 h-12 rounded-xl flex items-center justify-center text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))]"
-        title="Session Active"
+        title="Log out"
+        aria-label="Log out"
       >
         <LogOut size={20} strokeWidth={1.5} />
       </button>
@@ -76,36 +76,16 @@ export default function Sidebar({ role, onRoleChange }) {
           <span className="text-[9px] font-medium">{label}</span>
         </NavLink>
       ))}
+      <button
+        type="button"
+        onClick={logout}
+        className="shrink-0 flex flex-col items-center justify-center gap-0.5 w-16 h-full text-[#A89C8E]"
+        aria-label="Log out"
+      >
+        <LogOut size={19} strokeWidth={1.5} />
+        <span className="text-[9px] font-medium">Logout</span>
+      </button>
     </nav>
     </>
-  );
-}
-
-function RoleSwitcher({ role, onRoleChange }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="relative mb-1">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="w-12 h-7 rounded-lg border border-[#3A322C] text-[10px] font-medium text-[#A89C8E] flex items-center justify-center"
-      >
-        {ROLE_LABEL[role]}
-      </button>
-      {open && (
-        <div className="absolute bottom-9 left-1/2 -translate-x-1/2 bg-[hsl(var(--card))] border border-[hsl(var(--border))] rounded-xl py-1 w-20 z-50">
-          {Object.keys(ROLE_LABEL).map((r) => (
-            <button
-              key={r}
-              onClick={() => { onRoleChange(r); setOpen(false); }}
-              className={`block w-full text-left px-3 py-1.5 text-xs hover:bg-[hsl(var(--muted))] ${
-                role === r ? "text-[hsl(var(--primary))] font-medium" : "text-[#F3EAE3]"
-              }`}
-            >
-              {ROLE_LABEL[r]}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
   );
 }

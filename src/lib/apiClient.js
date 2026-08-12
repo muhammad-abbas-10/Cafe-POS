@@ -1,6 +1,6 @@
-const BASE_URL = import.meta.env.VITE_API_URL;
+const BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
-function getToken() {
+export function getToken() {
   return localStorage.getItem("pos_auth_token");
 }
 
@@ -10,6 +10,12 @@ export function setToken(token) {
 
 export function clearToken() {
   localStorage.removeItem("pos_auth_token");
+}
+
+export function clearAuthStorage() {
+  clearToken();
+  localStorage.removeItem("pos_auth_user");
+  localStorage.removeItem("pos_role");
 }
 
 async function request(path, options = {}) {
@@ -23,18 +29,18 @@ async function request(path, options = {}) {
     ...options,
   });
 
-  if (res.status === 401) {
-    clearToken();
-    window.location.href = "/login";
+  if (res.status === 401 && path !== "/auth/login") {
+    clearAuthStorage();
+    window.location.replace("/login");
     throw new Error("Session expired, please log in again");
   }
 
   if (res.status === 204) return null;
 
-  const data = await res.json();
+  const data = await res.json().catch(() => null);
 
   if (!res.ok) {
-    throw new Error(data?.error?.message || "Something went wrong");
+    throw new Error(data?.error?.message || `Request failed (${res.status})`);
   }
 
   return data;

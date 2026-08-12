@@ -19,10 +19,11 @@ export default function Login() {
     setError("");
     setLoading(true);
     try {
-      const result = await apiPost("/auth/login", { username, password });
+      const result = await apiPost("/auth/login", { username: username.trim(), password });
       login(result.token, result.user);
-      window.location.href = "/order";
+      window.location.replace("/order");
     } catch (err) {
+      setPassword("");
       setError(err.message || "Invalid username or password");
     } finally {
       setLoading(false);
@@ -50,7 +51,7 @@ export default function Login() {
               placeholder="admin"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="pl-10 h-12"
+              className="pl-10 h-12 text-white"
               required
             />
           </div>
@@ -66,7 +67,7 @@ export default function Login() {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 h-12"
+              className="pl-10 h-12 text-white"
               required
             />
           </div>
