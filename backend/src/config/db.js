@@ -7,7 +7,6 @@ const pool = new Pool({
 
 pool.on("error", (err) => {
   console.error("Unexpected error on idle client", err);
-  process.exit(-1);
 });
 
 async function checkConnection() {
@@ -17,10 +16,9 @@ async function checkConnection() {
     client.release();
   } catch (err) {
     console.error("Database connection failed:", err.message);
-    process.exit(1);
+    throw err;
   }
 }
 
-checkConnection();
-
 module.exports = pool;
+module.exports.checkConnection = checkConnection;

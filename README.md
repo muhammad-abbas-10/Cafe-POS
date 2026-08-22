@@ -93,7 +93,13 @@ base44 dashboard open
 
 The repository-level `vercel.json` installs and builds the Vite app from `frontend/`. When importing the GitHub repository, leave Vercel's Root Directory at the repository root and do not override the commands from `vercel.json`.
 
-Configure `VITE_API_URL` in the Vercel project environment to point to the deployed backend API, including `/api`.
+The repository-level deployment serves the Express API as a Vercel Function under
+`/api`, so `VITE_API_URL` should be left unset in Vercel. The frontend will use the
+same-origin `/api` URL.
+
+Add the backend values from `backend/.env` to the Vercel project's environment
+variables. At minimum, login requires `ADMIN_USERNAME`, `ADMIN_PASSWORD_HASH`, and
+`JWT_SECRET`; data routes also require `DATABASE_URL`. Redeploy after changing them.
 
 ## Docs & Support
 
