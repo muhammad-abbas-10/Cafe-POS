@@ -1,110 +1,64 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
+# Cafe POS
 
-# Base44 Project
+This project runs locally as two processes:
 
-Use this repository to run and edit the app locally, then publish changes back through db.
+- `frontend/`: React and Vite at `http://127.0.0.1:5173`
+- `backend/`: Express API at `http://127.0.0.1:5000`
 
-Any change pushed to the repo will also be reflected in the Base44 Builder.
-
-## Project Layout
-
-```text
-frontend/  React, Vite, Base44 configuration, assets, and frontend environment
-backend/   Express API, PostgreSQL repositories, migrations, and backend environment
-```
-
-Run frontend commands from `frontend/` and backend commands from `backend/`.
+Vite proxies browser requests from `/api` to the local Express server. The
+backend uses an embedded PostgreSQL-compatible database stored under
+`backend/.data/`. No deployed service, Docker process, Base44 development
+server, or frontend environment file is required.
 
 ## Prerequisites
 
-1. Clone the repository using the project's Git URL.
-2. Navigate to the frontend directory: `cd frontend`.
-3. Install dependencies: `npm install`.
-4. Install the Base44 CLI: `npm install -g base44@latest`.
+- Node.js and npm
 
-See the [Base44 CLI docs](https://docs.db.com/developers/references/cli/get-started/overview) if you want to run Base44 commands directly.
+## Install
 
-## Run Locally
+From the repository root:
 
-Run the Base44 development environment from the `frontend/` directory:
-
-```bash
-base44 dev
+```powershell
+npm install --prefix backend
+npm install --prefix frontend
 ```
 
-`base44 dev` starts the local Base44 development backend and, when this app is configured for it, also starts the frontend dev server for you. Use the frontend URL printed by the command.
+## Run locally
 
-For example, when the Base44 project config includes a `serveCommand`, `base44 dev` can launch the frontend too:
+Open two terminals at the repository root.
 
-```json5
-{
-  "site": {
-    "serveCommand": "npm run dev"
-  }
-}
+Terminal 1:
+
+```powershell
+npm run dev --prefix backend
 ```
 
-In this project it lives in `frontend/base44/config.jsonc`.
+Terminal 2:
 
-## Run Only The Frontend
-
-If you only want to work on the frontend against the hosted Base44 backend, run this from `frontend/`:
-
-```bash
-npm run dev
+```powershell
+npm run dev --prefix frontend
 ```
 
-Open the local URL printed by Vite.
+Open `http://127.0.0.1:5173` in your browser. Keep both terminals running while
+you test the app. Use `admin` / `admin123` on the login page.
 
-## Backend CORS
+On its first start, the backend creates `backend/.data/cafe-pos`, applies the
+schema, and adds sample menu data. `backend/.env` configures this local database
+and is ignored by git. To stop the app, press Ctrl+C in both terminals.
 
-Set `CORS_ORIGINS` in `backend/.env` to the exact frontend origins allowed to call the API. Separate multiple origins with commas and do not include URL paths.
+## Database migrations
 
-```env
-CORS_ORIGINS=https://cafe.example.com,https://admin.cafe.example.com
+The embedded database applies new migrations automatically when the backend
+starts. With the backend stopped, you can also apply them explicitly with:
+
+```powershell
+npm run migrate --prefix backend
 ```
 
-In development only, the backend defaults to `http://localhost:5173` and `http://127.0.0.1:5173`. In production, an unset allowlist denies all browser origins.
+## Production build check
 
-## Use The Hosted Backend
+To verify that the frontend can compile locally without deploying it:
 
-For frontend-only development, create or update `frontend/.env.local`:
-
-```bash
-VITE_BASE44_APP_ID=your_app_id
-VITE_BASE44_APP_BASE_URL=https://your-app.db.app
+```powershell
+npm run build --prefix frontend
 ```
-
-`VITE_BASE44_APP_ID` identifies the Base44 app.
-
-`VITE_BASE44_APP_BASE_URL` tells the Base44 Vite plugin where to send local `/api` requests. Point it at your deployed Base44 app URL when you want the local frontend to use the hosted backend.
-
-When you use `base44 dev`, the command injects the local Base44 values for you, so `frontend/.env.local` is mainly needed for frontend-only workflows.
-
-## Publish Your Changes
-
-After pushing your changes to git, run this from `frontend/` to open the Base44 dashboard and publish the app:
-
-```bash
-base44 dashboard open
-```
-
-## Deploy The Frontend To Vercel
-
-The repository-level `vercel.json` installs and builds the Vite app from `frontend/`. When importing the GitHub repository, leave Vercel's Root Directory at the repository root and do not override the commands from `vercel.json`.
-
-The repository-level deployment serves the Express API as a Vercel Function under
-`/api`, so `VITE_API_URL` should be left unset in Vercel. The frontend will use the
-same-origin `/api` URL.
-
-Add the backend values from `backend/.env` to the Vercel project's environment
-variables. At minimum, login requires `ADMIN_USERNAME`, `ADMIN_PASSWORD_HASH`, and
-`JWT_SECRET`; data routes also require `DATABASE_URL`. Redeploy after changing them.
-
-## Docs & Support
-
-Documentation: [https://docs.db.com/Integrations/Using-GitHub](https://docs.db.com/Integrations/Using-GitHub)
-
-Base44 CLI command reference: [https://docs.db.com/developers/references/cli/commands/introduction](https://docs.db.com/developers/references/cli/commands/introduction)
-
-Support: [https://app.db.com/support](https://app.db.com/support)
