@@ -1,18 +1,38 @@
 const fs = require("fs");
 const path = require("path");
+const { Pool } = require("pg");
 
-let databasePromise;
-let queue = Promise.resolve();
+const connectionString = process.env.DATABASE_URL;
 
-async function acquire() {
-  const previous = queue;
-  let release;
-  queue = new Promise((resolve) => {
-    release = resolve;
-  });
-  await previous;
-  return release;
+if (!connectionString) {
+  throw new Error("DATABASE_URL is required");
 }
+
+function usesLocalDatabase(url) {
+  try {
+    const hostname = new URL(url).hostname;
+    return hostname === "localhost" || hostname === "127.0.0.1";
+  } catch {
+    return false;
+  }
+}
+
+const pool = new Pool({
+  connectionString,
+  // Vercel instances scale horizontally; one connection per warm instance
+  // prevents exhausting Supabase's transaction pooler.
+  max: 1,
+  idleTimeoutMillis: 10_000,
+  connectionTimeoutMillis: 10_000,
+  keepAlive: true,
+  ssl: usesLocalDatabase(connectionString)
+    ? false
+    : { rejectUnauthorized: false },
+});
+
+pool.on("error", (error) => {
+  console.error("Unexpected PostgreSQL pool error:", error.message);
+});
 
 function migrationFiles() {
   const migrationsDir = path.join(__dirname, "..", "..", "migrations");
@@ -24,10 +44,12 @@ function migrationFiles() {
       sql: fs.readFileSync(path.join(migrationsDir, file), "utf8"),
     }));
 
-  if (process.env.SEED_LOCAL_DB !== "false") {
-    const seedName = "local/004_seed.sql";
+  if (
+    process.env.SEED_DATABASE === "true" ||
+    process.env.SEED_LOCAL_DB === "true"
+  ) {
     files.push({
-      name: seedName,
+      name: "local/004_seed.sql",
       sql: fs.readFileSync(
         path.join(__dirname, "..", "..", "local-db", "004_seed.sql"),
         "utf8"
@@ -38,105 +60,73 @@ function migrationFiles() {
   return files;
 }
 
-async function initializeDatabase() {
-  const { PGlite } = await import("@electric-sql/pglite");
-  const dataDir = path.resolve(
-    __dirname,
-    "..",
-    "..",
-    process.env.PGLITE_DATA_DIR || ".data/cafe-pos"
-  );
-  fs.mkdirSync(path.dirname(dataDir), { recursive: true });
-  const database = await PGlite.create(dataDir);
+let migrationPromise;
 
-  await database.exec(`
-    CREATE TABLE IF NOT EXISTS schema_migrations (
-      name text PRIMARY KEY,
-      applied_at timestamptz NOT NULL DEFAULT now()
+async function applyMigrations() {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+    await client.query(
+      "SELECT pg_advisory_xact_lock(hashtext($1))",
+      ["cafe-pos-migrations"]
     );
-  `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS schema_migrations (
+        name text PRIMARY KEY,
+        applied_at timestamptz NOT NULL DEFAULT now()
+      )
+    `);
 
-  for (const migration of migrationFiles()) {
-    const applied = await database.query(
-      "SELECT 1 FROM schema_migrations WHERE name = $1",
-      [migration.name]
-    );
-    if (applied.rows.length > 0) continue;
+    for (const migration of migrationFiles()) {
+      const applied = await client.query(
+        "SELECT 1 FROM schema_migrations WHERE name = $1",
+        [migration.name]
+      );
+      if (applied.rowCount > 0) continue;
 
-    await database.transaction(async (transaction) => {
-      await transaction.exec(migration.sql);
-      await transaction.query(
+      await client.query(migration.sql);
+      await client.query(
         "INSERT INTO schema_migrations (name) VALUES ($1)",
         [migration.name]
       );
-    });
-  }
+    }
 
-  return database;
+    await client.query("COMMIT");
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
-function getDatabase() {
-  if (!databasePromise) {
-    databasePromise = initializeDatabase().catch((error) => {
-      databasePromise = undefined;
+function migrate() {
+  if (!migrationPromise) {
+    migrationPromise = applyMigrations().catch((error) => {
+      migrationPromise = undefined;
       throw error;
     });
   }
-  return databasePromise;
-}
-
-async function query(sql, params) {
-  const release = await acquire();
-  try {
-    const database = await getDatabase();
-    return await database.query(sql, params);
-  } finally {
-    release();
-  }
-}
-
-async function connect() {
-  const releaseLock = await acquire();
-  try {
-    const database = await getDatabase();
-    let released = false;
-    return {
-      query(sql, params) {
-        if (released) throw new Error("Database client has already been released");
-        return database.query(sql, params);
-      },
-      release() {
-        if (released) return;
-        released = true;
-        releaseLock();
-      },
-    };
-  } catch (error) {
-    releaseLock();
-    throw error;
-  }
+  return migrationPromise;
 }
 
 async function checkConnection() {
-  try {
-    await query("SELECT 1");
-    console.log("Embedded database connected successfully");
-  } catch (error) {
-    console.error("Embedded database failed:", error.message);
-    throw error;
-  }
-}
-
-async function end() {
-  if (!databasePromise) return;
-  const database = await databasePromise;
-  await database.close();
-  databasePromise = undefined;
+  await pool.query("SELECT 1");
+  await migrate();
+  console.log("PostgreSQL database connected successfully");
 }
 
 module.exports = {
-  query,
-  connect,
+  query(sql, params) {
+    return pool.query(sql, params);
+  },
+  connect() {
+    return pool.connect();
+  },
+  migrate,
   checkConnection,
-  end,
+  end() {
+    return pool.end();
+  },
 };

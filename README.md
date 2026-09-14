@@ -6,9 +6,9 @@ This project runs locally as two processes:
 - `backend/`: Express API at `http://127.0.0.1:5000`
 
 Vite proxies browser requests from `/api` to the local Express server. The
-backend uses an embedded PostgreSQL-compatible database stored under
-`backend/.data/`. No deployed service, Docker process, Base44 development
-server, or frontend environment file is required.
+backend connects to PostgreSQL using `DATABASE_URL`. For Vercel deployments,
+use the Supabase Transaction pooler connection string and keep secrets in the
+Vercel project environment rather than tracked files.
 
 ## Prerequisites
 
@@ -42,18 +42,37 @@ npm run dev --prefix frontend
 Open `http://127.0.0.1:5173` in your browser. Keep both terminals running while
 you test the app. Use `admin` / `admin123` on the login page.
 
-On its first start, the backend creates `backend/.data/cafe-pos`, applies the
-schema, and adds sample menu data. `backend/.env` configures this local database
-and is ignored by git. To stop the app, press Ctrl+C in both terminals.
+On its first start, the backend applies the SQL migrations. Set
+`SEED_DATABASE=true` to add the sample menu data once. The legacy
+`SEED_LOCAL_DB=true` setting is also supported. `backend/.env` configures the
+local process and is ignored by git. To stop the app, press Ctrl+C in both
+terminals.
 
 ## Database migrations
 
-The embedded database applies new migrations automatically when the backend
-starts. With the backend stopped, you can also apply them explicitly with:
+The backend applies new migrations automatically when it starts. You can also
+apply them explicitly with:
 
 ```powershell
 npm run migrate --prefix backend
 ```
+
+## Vercel deployment
+
+The root `vercel.json` deploys the Vite frontend and Express backend as one
+Vercel Services project. Configure these variables for Production and Preview:
+
+- `DATABASE_URL`: Supabase Transaction pooler URL (port `6543`) with
+  `sslmode=require`
+- `ADMIN_USERNAME`: administrator login name
+- `ADMIN_PASSWORD_HASH`: bcrypt password hash
+- `JWT_SECRET`: long random signing secret
+
+Set `SEED_DATABASE=true` only if you want the sample catalog inserted during
+the first migration.
+
+`CORS_ORIGINS` is optional for the same-origin deployment. Do not set `PORT` or
+`VITE_API_URL` on Vercel.
 
 ## Production build check
 
