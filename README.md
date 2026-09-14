@@ -65,7 +65,7 @@ Vercel Services project. Configure these variables for Production and Preview:
 - `DATABASE_URL`: Supabase Transaction pooler URL (port `6543`) with
   `sslmode=require`
 - `ADMIN_USERNAME`: administrator login name
-- `ADMIN_PASSWORD_HASH`: bcrypt password hash
+- `ADMIN_PASSWORD`: administrator login password
 - `JWT_SECRET`: long random signing secret
 
 Set `SEED_DATABASE=true` only if you want the sample catalog inserted during

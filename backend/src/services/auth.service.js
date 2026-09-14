@@ -1,6 +1,14 @@
-const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const ApiError = require("../utils/ApiError");
+
+function passwordsMatch(provided, configured) {
+  if (!configured) return false;
+
+  const providedDigest = crypto.createHash("sha256").update(provided).digest();
+  const configuredDigest = crypto.createHash("sha256").update(configured).digest();
+  return crypto.timingSafeEqual(providedDigest, configuredDigest);
+}
 
 async function login(username, password) {
   if (!username || !password) {
@@ -9,7 +17,7 @@ async function login(username, password) {
 
   const validUsername = username === process.env.ADMIN_USERNAME;
   const validPassword = validUsername
-    ? await bcrypt.compare(password, process.env.ADMIN_PASSWORD_HASH)
+    ? passwordsMatch(password, process.env.ADMIN_PASSWORD)
     : false;
 
   if (!validUsername || !validPassword) {
